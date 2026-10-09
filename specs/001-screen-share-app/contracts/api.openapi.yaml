@@ -1,0 +1,98 @@
+openapi: 3.0.3
+info: {title: Screen Share API, version: 0.1.0}
+paths:
+  /rooms:
+    post:
+      summary: Cria sala (FR-001, FR-002, FR-022)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName: {type: string, minLength: 1, maxLength: 32}
+                password: {type: string, minLength: 4, maxLength: 64}
+                maxParticipants: {type: integer, minimum: 2, maximum: 10, default: 10}
+                expiresInMinutes: {type: integer, minimum: 15, maximum: 1440, default: 720}
+      responses:
+        '201':
+          description: Sala criada, já com token para o criador
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JoinResult'}
+        '400': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
+  /rooms/{code}/token:
+    post:
+      summary: Entra em sala existente (FR-003, FR-004, FR-005)
+      parameters:
+        - {name: code, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName: {type: string, minLength: 1, maxLength: 32}
+                password: {type: string}
+      responses:
+        '200':
+          description: Token emitido
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JoinResult'}
+        '401': {$ref: '#/components/responses/Error'}   # senha inválida
+        '404': {$ref: '#/components/responses/Error'}   # código inexistente
+        '409': {$ref: '#/components/responses/Error'}   # sala lotada
+        '410': {$ref: '#/components/responses/Error'}   # sala expirada
+        '429': {$ref: '#/components/responses/Error'}
+  /version:
+    get:
+      summary: Versão mais recente do app (FR-016)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [latest, downloadUrl]
+                properties:
+                  latest: {type: string, example: 1.2.0}
+                  downloadUrl: {type: string, format: uri}
+  /config:
+    get:
+      summary: Endereço do servidor de mídia
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [mediaUrl]
+                properties:
+                  mediaUrl: {type: string, example: 'wss://live.example.com'}
+components:
+  schemas:
+    JoinResult:
+      type: object
+      required: [code, serverUrl, token, expiresAt]
+      properties:
+        code: {type: string, example: ABCD-EFGH-JKLM-NPQR}
+        serverUrl: {type: string, description: URL wss do servidor de mídia}
+        token: {type: string}
+        expiresAt: {type: string, format: date-time, description: expiração da sala}
+  responses:
+    Error:
+      description: Erro
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, message]
+            properties:
+              error: {type: string, enum: [invalid_request, wrong_password, room_not_found, room_full, room_expired, rate_limited, server_error]}
+              message: {type: string, description: mensagem legível em português}
