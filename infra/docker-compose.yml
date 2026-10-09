@@ -1,0 +1,51 @@
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    environment:
+      LIVEKIT_KEYS: '${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}'
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - '7881:7881/tcp'
+      - '3478:3478/udp'
+      - '5349:5349/tcp'
+      - '50000-50100:50000-50100/udp'
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_PATH: /data/rooms.sqlite
+      LIVEKIT_URL: wss://live.${DOMAIN}
+      LIVEKIT_API_URL: http://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      VERSION_FILE: /config/version.json
+    volumes:
+      - api-data:/data
+      - ./version.json:/config/version.json:ro
+    depends_on: [livekit]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv/site:ro
+      - caddy-data:/data
+    depends_on: [api, livekit]
+
+volumes:
+  api-data:
+  caddy-data:
