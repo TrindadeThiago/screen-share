@@ -1,0 +1,15 @@
+appId: com.screenshare.app
+productName: ScreenShare
+directories:
+  output: release
+files:
+  - dist/**
+  - package.json
+win:
+  target:
+    - target: portable
+      arch: [x64]
+  requestedExecutionLevel: asInvoker
+  artifactName: ScreenShare-portable.exe
+portable:
+  artifactName: ScreenShare-portable.exe

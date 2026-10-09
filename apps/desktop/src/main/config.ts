@@ -1,0 +1,63 @@
+import { join } from 'node:path';
+
+export const DEFAULT_SERVER_URL = 'https://screenshare.example.com';
+export const CONFIG_FILE_NAME = 'config.json';
+
+/** Normaliza o endereço digitado: assume https se faltar esquema; só aceita http/https; devolve a origem. */
+export function normalizeServerUrl(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const raw = input.trim();
+  if (!raw) return null;
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+    if (!u.hostname) return null;
+    return u.origin;
+  } catch {
+    return null;
+  }
+}
+
+/** Lê `apiUrl` de um config.json; qualquer falha retorna null. */
+export function readConfigFile(dir: string, readFile: (path: string) => string): string | null {
+  try {
+    const data = JSON.parse(readFile(join(dir, CONFIG_FILE_NAME))) as { apiUrl?: unknown };
+    return normalizeServerUrl(data.apiUrl);
+  } catch {
+    return null;
+  }
+}
+
+export interface ServerSources {
+  saved?: string | null; // escolhido na tela do app
+  file?: string | null; // config.json ao lado do .exe
+  env?: string | null; // SCREEN_SHARE_API_URL
+}
+
+/** Prioridade: escolha salva no app > config.json > variável de ambiente > padrão. */
+export function resolveServerUrl(s: ServerSources): string {
+  return (
+    normalizeServerUrl(s.saved) ??
+    normalizeServerUrl(s.file) ??
+    normalizeServerUrl(s.env) ??
+    DEFAULT_SERVER_URL
+  );
+}
+
+/** Pergunta à API o endereço do servidor de mídia. Retorna null se indisponível ou inválido. */
+export async function fetchMediaUrl(
+  apiUrl: string,
+  fetchFn: typeof fetch = fetch,
+  timeoutMs = 4000,
+): Promise<string | null> {
+  try {
+    const res = await fetchFn(`${apiUrl}/config`, { signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { mediaUrl?: unknown };
+    if (typeof data.mediaUrl !== 'string') return null;
+    const u = new URL(data.mediaUrl);
+    return ['ws:', 'wss:', 'http:', 'https:'].includes(u.protocol) ? u.origin : null;
+  } catch {
+    return null;
+  }
+}
