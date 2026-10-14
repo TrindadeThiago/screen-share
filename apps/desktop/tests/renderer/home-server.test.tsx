@@ -1,9 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { installScreenShareMock } from '../setup';
 import { Home } from '../../src/renderer/screens/Home';
 
-const setup = (onChangeServer = vi.fn().mockResolvedValue(undefined)) => {
+beforeEach(() => void installScreenShareMock());
+
+const setup = async (onChangeServer = vi.fn().mockResolvedValue(undefined)) => {
   render(
     <Home
       api={{} as never}
@@ -12,12 +15,13 @@ const setup = (onChangeServer = vi.fn().mockResolvedValue(undefined)) => {
       onJoined={vi.fn()}
     />,
   );
+  await userEvent.click(screen.getByRole('button', { name: 'Configurações' }));
   return onChangeServer;
 };
 
 describe('endereço do servidor', () => {
   it('mostra o endereço atual e deixa salvar só quando muda', async () => {
-    setup();
+    await setup();
     const input = screen.getByLabelText('Endereço do servidor');
     expect(input).toHaveValue('https://api.example.com');
     expect(screen.getByRole('button', { name: 'Salvar servidor' })).toBeDisabled();
@@ -26,7 +30,7 @@ describe('endereço do servidor', () => {
     expect(screen.getByRole('button', { name: 'Salvar servidor' })).toBeEnabled();
   });
   it('envia o novo endereço ao salvar', async () => {
-    const on = setup();
+    const on = await setup();
     const input = screen.getByLabelText('Endereço do servidor');
     await userEvent.clear(input);
     await userEvent.type(input, 'http://100.1.2.3:3000');
@@ -34,7 +38,7 @@ describe('endereço do servidor', () => {
     expect(on).toHaveBeenCalledWith('http://100.1.2.3:3000');
   });
   it('mostra o erro quando o endereço é recusado', async () => {
-    setup(
+    await setup(
       vi
         .fn()
         .mockRejectedValue(

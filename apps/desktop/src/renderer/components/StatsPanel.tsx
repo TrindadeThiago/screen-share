@@ -81,6 +81,8 @@ export function computeMetrics(prev: StatsSample, curr: StatsSample): Metrics {
   };
 }
 
+const PANEL = 'rounded-lg bg-black/70 px-3 py-2 text-xs text-white/80 backdrop-blur';
+
 const LIMITATION_TEXT: Record<string, string> = {
   cpu: 'processador',
   bandwidth: 'rede',
@@ -108,10 +110,13 @@ export function StatsPanel({
     return () => clearInterval(id);
   }, [readSample, intervalMs]);
 
-  if (!metrics) return <p>Coletando métricas…</p>;
+  if (!metrics) return <p className={PANEL}>Coletando métricas…</p>;
   const v = metrics.video;
   return (
-    <dl aria-label="Métricas de conexão">
+    <dl
+      aria-label="Métricas de conexão"
+      className={`${PANEL} grid grid-cols-[auto_auto] gap-x-4 gap-y-1 [&_dd]:m-0 [&_dd]:text-right [&_dd]:font-medium [&_dd]:text-white [&_dt]:text-white/65`}
+    >
       <dt>Taxa de bits</dt>
       <dd>{metrics.bitrateKbps} kbps</dd>
       <dt>Perda de pacotes</dt>

@@ -8,8 +8,8 @@ App desktop (Windows 10/11, `.exe` portable) para compartilhar a tela com amigos
 2. Digite seu nome e **Criar sala**; copie o código e envie. Para entrar, cole o código e clique em **Entrar**.
 3. **Compartilhar tela** → escolha uma tela inteira (com áudio) ou uma janela (sem áudio).
 4. **Eco:** ao transmitir uma tela inteira, o app envia todo o som do computador, inclusive as vozes dos amigos tocadas por ele; fone de ouvido não evita isso. Marque _Silenciar as vozes para mim enquanto transmito_ para eliminar o eco.
-5. **Voz:** segure `V` para falar com o app em foco (a tecla pode ser trocada na sala). `Ctrl+Shift+M` liga e desliga o microfone aberto mesmo com o app em segundo plano.
-6. **Deu problema?** _Copiar diagnóstico_ na sala copia o log (sem códigos de sala) para você colar e enviar.
+5. **Voz:** o botão do microfone, ou `Ctrl+Shift+M` de qualquer lugar, liga e desliga o microfone. Em **Configurações** dá para habilitar "segurar `V` para falar" e trocar a tecla.
+6. **Deu problema?** _Copiar diagnóstico_, em **Configurações**, copia o log (sem códigos de sala) para você colar e enviar.
 
 ## Endereço do servidor
 

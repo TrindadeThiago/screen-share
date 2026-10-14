@@ -10,10 +10,11 @@ export function UpdateBanner() {
 
   if (!info) return null;
   return (
-    <div role="alert" className="update-banner">
+    <div role="alert" className="shrink-0 bg-accent px-4 py-1.5 text-center text-sm text-white">
       Nova versão {info.latest} disponível.{' '}
       <a
         href={info.downloadUrl}
+        className="font-semibold underline"
         onClick={(e) => {
           e.preventDefault();
           void window.screenShare.openExternal(info.downloadUrl);

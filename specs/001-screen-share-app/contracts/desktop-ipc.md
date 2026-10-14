@@ -8,7 +8,7 @@ Exposto ao renderer apenas via `contextBridge` como `window.screenShare`. Sem ac
 | `selectSource(id): Promise<void>` | renderer → main | Define a fonte; o handler de `getDisplayMedia` a usa. Tela → vídeo + `audio: 'loopback'`; janela → só vídeo |
 | `getAppVersion(): Promise<string>` | renderer → main | Versão atual do app |
 | `openExternal(url): Promise<void>` | renderer → main | Abre link de download no navegador; só `https` e domínio permitido |
-| `getPreferences()/setPreferences(p)` | renderer ↔ main | Nome, volume, preset, tecla de push-to-talk, simulcast, silenciar vozes ao transmitir |
+| `getPreferences()/setPreferences(p)` | renderer ↔ main | Nome, volume, preset, push-to-talk (ligado e tecla), simulcast, silenciar vozes ao transmitir |
 | `getServerKey(): Promise<string \| null>` | renderer → main | Chave para criar salas, lida de `config.json` (`serverKey`) ou `SCREEN_SHARE_SERVER_KEY` |
 | `getMediaUrl(): Promise<string \| null>` | renderer → main | `mediaUrl` do `config.json`: servidor de mídia a usar no lugar do informado pela API |
 | `logDiagnostic(message)` / `readDiagnostics()` | renderer → main | Log rotativo em `userData/logs/diagnostics.log`; códigos de sala e tokens são removidos |

@@ -168,10 +168,40 @@ describe('tela da sala (transmissor)', () => {
     );
     expect(sm.setInRoom).toHaveBeenCalledWith(true);
     await waitFor(() => expect(sm.logDiagnostic).toHaveBeenCalledWith('conexão: connected'));
+    await userEvent.click(screen.getByRole('button', { name: 'Configurações' }));
     await userEvent.click(screen.getByRole('button', { name: 'Copiar diagnóstico' }));
     expect(writeText).toHaveBeenCalledWith('linhas');
     unmount();
     expect(sm.setInRoom).toHaveBeenLastCalledWith(false);
+  });
+  it('preferências ficam num diálogo só, sem trocar de servidor dentro da sala', async () => {
+    const sm = installScreenShareMock();
+    render(
+      <Room join={join} displayName="Ana" api={roomApi} serverUrl="http://x" onLeave={vi.fn()} />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Configurações' }));
+    expect(screen.getByLabelText('Endereço do servidor')).toBeDisabled();
+    await userEvent.selectOptions(screen.getByLabelText('Qualidade'), 'detail');
+    expect(sm.setPreferences).toHaveBeenCalledWith({ preset: 'detail' });
+    await userEvent.click(screen.getByLabelText(/Segurar V para falar/));
+    expect(sm.setPreferences).toHaveBeenCalledWith({ pushToTalk: true });
+  });
+  it('o seletor abre em Telas e mostra as janelas na outra aba', async () => {
+    installScreenShareMock({
+      listSources: vi.fn().mockResolvedValue([
+        { id: 'screen:0:0', name: 'Tela 1', thumbnailDataUrl: 'data:x', kind: 'screen' },
+        { id: 'window:1:0', name: 'Jogo', thumbnailDataUrl: 'data:x', kind: 'window' },
+      ]),
+    });
+    render(<Room join={join} displayName="Ana" api={roomApi} onLeave={vi.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Compartilhar tela' })).toBeEnabled(),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Compartilhar tela' }));
+    expect(await screen.findByRole('button', { name: /Tela 1/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Jogo/ })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Janelas' }));
+    expect(screen.getByRole('button', { name: /Jogo/ })).toBeInTheDocument();
   });
   it('atalho global abre e fecha o microfone', async () => {
     let toggle = () => {};
