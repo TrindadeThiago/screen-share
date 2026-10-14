@@ -15,6 +15,7 @@ const bridge: ScreenShareBridge = {
   getServerKey: () => ipcRenderer.invoke('server:key'),
   setServerKey: (key) => ipcRenderer.invoke('server:setKey', key),
   getMediaUrl: () => ipcRenderer.invoke('server:media'),
+  setMediaUrl: (url) => ipcRenderer.invoke('server:setMedia', url),
   logDiagnostic: (message) => ipcRenderer.invoke('diag:log', message),
   readDiagnostics: () => ipcRenderer.invoke('diag:read'),
   setInRoom: (inRoom) => ipcRenderer.invoke('room:active', inRoom),

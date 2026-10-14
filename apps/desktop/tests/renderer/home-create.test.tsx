@@ -180,6 +180,7 @@ describe('tela da sala (transmissor)', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Configurações' }));
     expect(screen.getByLabelText('Endereço do servidor')).toBeDisabled();
+    expect(screen.getByLabelText('Servidor de mídia (opcional)')).toBeDisabled();
     await userEvent.selectOptions(screen.getByLabelText('Qualidade'), 'detail');
     expect(sm.setPreferences).toHaveBeenCalledWith({ preset: 'detail' });
     await userEvent.click(screen.getByLabelText(/Segurar V para falar/));

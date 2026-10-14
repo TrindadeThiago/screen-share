@@ -16,6 +16,10 @@ interface Props {
   hasServerKey?: boolean;
   /** Ausente dentro de uma sala, como o servidor. */
   onChangeKey?: (key: string | null) => Promise<void>;
+  /** Servidor de mídia em uso no lugar do da API; null usa o da API. */
+  mediaUrl?: string | null;
+  /** Ausente dentro de uma sala: trocar recarrega o app. */
+  onChangeMedia?: (url: string | null) => Promise<void>;
 }
 
 const PRESET_HINT: Record<PresetName, string> = {
@@ -31,11 +35,15 @@ export function SettingsDialog({
   onChangeServer,
   hasServerKey = false,
   onChangeKey,
+  mediaUrl = null,
+  onChangeMedia,
 }: Props) {
   const [serverInput, setServerInput] = useState(serverUrl);
   const [serverMsg, setServerMsg] = useState<string | null>(null);
   const [keyInput, setKeyInput] = useState('');
   const [keyMsg, setKeyMsg] = useState<string | null>(null);
+  const [mediaInput, setMediaInput] = useState(mediaUrl ?? '');
+  const [mediaMsg, setMediaMsg] = useState<string | null>(null);
   const [choosingKey, setChoosingKey] = useState(false);
   const [diagCopied, setDiagCopied] = useState(false);
   const preset = prefs.preset ?? 'motion';
@@ -59,6 +67,15 @@ export function SettingsDialog({
       setKeyMsg(key ? 'Chave salva.' : 'Chave removida.');
     } catch (err) {
       setKeyMsg(ipcErrorText(err, 'Não foi possível salvar a chave.'));
+    }
+  };
+
+  const saveMedia = async (url: string | null) => {
+    setMediaMsg(null);
+    try {
+      await onChangeMedia?.(url);
+    } catch (err) {
+      setMediaMsg(ipcErrorText(err, 'Endereço inválido.'));
     }
   };
 
@@ -186,6 +203,40 @@ export function SettingsDialog({
             </div>
             <p className="text-xs text-faint">Só é necessária para criar salas.</p>
             {keyMsg && <p className="text-xs text-soft">{keyMsg}</p>}
+          </form>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveMedia(mediaInput.trim());
+            }}
+            aria-label="Servidor de mídia"
+            className="flex flex-col gap-3"
+          >
+            <div className="flex items-end gap-2">
+              <Field
+                label="Servidor de mídia (opcional)"
+                className="flex-1"
+                value={mediaInput}
+                placeholder="Automático (informado pelo servidor)"
+                disabled={!onChangeMedia}
+                onChange={(e) => setMediaInput(e.target.value)}
+              />
+              <Button
+                type="submit"
+                disabled={
+                  !onChangeMedia || !mediaInput.trim() || mediaInput.trim() === (mediaUrl ?? '')
+                }
+              >
+                Salvar
+              </Button>
+              {mediaUrl && onChangeMedia && (
+                <Button onClick={() => void saveMedia(null)}>Usar automático</Button>
+              )}
+            </div>
+            <p className="text-xs text-faint">
+              Para quem hospeda o servidor no próprio PC: use ws://localhost:7880.
+            </p>
+            {mediaMsg && <Notice>{mediaMsg}</Notice>}
           </form>
         </Section>
 

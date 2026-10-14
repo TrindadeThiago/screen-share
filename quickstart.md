@@ -274,9 +274,14 @@ No celular em 4G, com o Wi-Fi desligado, abra `http://<seu IP público>:3300/con
 
 Do seu próprio PC esse endereço pode não responder: muitos roteadores domésticos não devolvem conexões feitas de dentro de casa para o IP público. Isso não é defeito e está resolvido no passo 7.7.
 
-### 7.7 Os dois `config.json`
+### 7.7 Configurar o app de quem hospeda e dos amigos
 
-Gere o `.exe` (passo 8). Quem hospeda precisa de um `config.json` **na mesma pasta** do `.exe`, porque o `mediaUrl` com `localhost` só pode ser definido por ele. Ele usa `localhost`, com a chave de criar salas:
+Baixe o `.exe` da release ou gere o seu (passo 8). Quem hospeda usa `localhost`:
+
+1. Na tela inicial, digite `http://localhost:3300` e a chave de criar salas (`ROOM_CREATION_KEY`).
+2. Em **Configurações → Servidor de mídia**, digite `ws://localhost:7880` e clique em **Salvar**. O app recarrega.
+
+Ou, em vez disso, ponha um `config.json` **na mesma pasta** do `.exe`:
 
 ```json
 {
@@ -297,14 +302,14 @@ Os amigos podem digitar `http://<seu IP público>:3300` na tela inicial do app o
 1. Você cria a sala e envia o código; os amigos colam e entram.
 2. Ao terminar, derrube o servidor: `docker compose -f docker-compose.yml -f docker-compose.home.yml down`.
 
-O IP público de conexões residenciais muda de tempos em tempos, em geral quando o roteador reinicia. Se mudar, atualize `PUBLIC_IP` no `.env`, suba o compose de novo e envie um `config.json` novo aos amigos.
+O IP público de conexões residenciais muda de tempos em tempos, em geral quando o roteador reinicia. Se mudar, atualize `PUBLIC_IP` no `.env`, suba o compose de novo e avise os amigos para trocar o endereço em **Configurações** (ou envie um `config.json` novo).
 
 ### Se der errado
 
 | Sintoma | O que verificar |
 |---|---|
 | O celular em 4G não abre `/config` | As regras do roteador apontam para o IP local certo? O servidor está no ar? Com WSL: modo espelhado ativo e os dois firewalls liberados (7.4 e 7.5)? |
-| Funciona no celular, mas não no seu PC | Use o `config.json` de quem hospeda (7.7), com `localhost` |
+| Funciona no celular, mas não no seu PC | Configure o app de quem hospeda com `localhost` e o servidor de mídia `ws://localhost:7880` (7.7) |
 | O amigo entra, mas o vídeo trava ou atrasa | A regra da 7882 está como UDP? Sem ela a mídia cai na 7881 (TCP), que funciona pior |
 | "Este servidor exige uma chave para criar salas" | Falta a chave ou ela está errada: digite-a no campo que aparece em **Nova sala** (ou em **Configurações**), ou use `serverKey` no `config.json` |
 | Parou de funcionar de um dia para o outro | O IP público mudou (7.8) |
@@ -327,7 +332,7 @@ Se o build parar com `Cannot create symbolic link ... O cliente não tem o privi
 | Sintoma | O que verificar |
 |---|---|
 | "Não foi possível conectar ao servidor" | A API está rodando? O endereço no app está certo (`http://` para IP local)? |
-| Entra na sala, mas "Não foi possível conectar à sala" | O LiveKit está rodando? Com a Tailscale, o `--node-ip` foi usado? As portas 7880, 7881 e 7882/udp estão publicadas? Hospedando em casa, use o `config.json` com `localhost` (7.7). |
+| Entra na sala, mas "Não foi possível conectar à sala" | O LiveKit está rodando? Com a Tailscale, o `--node-ip` foi usado? As portas 7880, 7881 e 7882/udp estão publicadas? Hospedando em casa, use `localhost` e o servidor de mídia `ws://localhost:7880` (7.7). |
 | Tela aparece, mas sem som | Compartilhe a **tela inteira**. Janela individual não envia áudio. |
 | Voz dos amigos volta na transmissão (eco) | Ao transmitir a tela inteira, todo o som do PC é enviado, inclusive as vozes tocadas pelo app; fone de ouvido não resolve. Marque **Silenciar as vozes para mim enquanto transmito**. |
 | Código "não encontrado" | Confira o código. Espaços e maiúsculas são ignorados, mas a sala pode ter expirado. |

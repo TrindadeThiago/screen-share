@@ -13,7 +13,8 @@ Exposto ao renderer apenas via `contextBridge` como `window.screenShare`. Sem ac
 | `isServerConfigured(): Promise<boolean>` | renderer → main | `false` sem endereço salvo, no `config.json` ou no ambiente: o app mostra a tela inicial |
 | `getServerKey(): Promise<string \| null>` | renderer → main | Chave para criar salas: salva no app > `config.json` (`serverKey`) > `SCREEN_SHARE_SERVER_KEY` |
 | `setServerKey(key \| null): Promise<void>` | renderer → main | Salva a chave cifrada com `safeStorage` em `preferences.json`; vazio ou `null` apaga |
-| `getMediaUrl(): Promise<string \| null>` | renderer → main | `mediaUrl` do `config.json`: servidor de mídia a usar no lugar do informado pela API |
+| `getMediaUrl(): Promise<string \| null>` | renderer → main | Servidor de mídia a usar no lugar do informado pela API: salvo no app > `mediaUrl` do `config.json`; `null` usa o da API |
+| `setMediaUrl(url \| null): Promise<void>` | renderer → main | Salva o servidor de mídia (ws/wss/http/https; sem esquema assume `ws://`) e recarrega o app; vazio ou `null` volta ao da API |
 | `logDiagnostic(message)` / `readDiagnostics()` | renderer → main | Log rotativo em `userData/logs/diagnostics.log`; códigos de sala e tokens são removidos |
 | `setInRoom(inRoom)` | renderer → main | Na sala: impede a tela de dormir e registra o atalho global `Ctrl+Shift+M` |
 | `onMicToggle(callback): () => void` | main → renderer | Atalho global pressionado: liga/desliga o microfone aberto |

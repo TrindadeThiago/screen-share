@@ -95,3 +95,49 @@ describe('chave do servidor', () => {
     expect(onChangeKey).toHaveBeenLastCalledWith(null);
   });
 });
+
+describe('servidor de mídia', () => {
+  const renderHome = (
+    mediaUrl: string | null,
+    onChangeMedia = vi.fn().mockResolvedValue(undefined),
+  ) => {
+    installScreenShareMock();
+    render(
+      <Home
+        api={{} as never}
+        serverUrl="https://api.example.com"
+        onChangeServer={vi.fn()}
+        mediaUrl={mediaUrl}
+        onChangeMedia={onChangeMedia}
+        onJoined={vi.fn()}
+      />,
+    );
+    return onChangeMedia;
+  };
+
+  it('salva o endereço digitado e mostra o erro do main', async () => {
+    const on = renderHome(null);
+    await userEvent.click(screen.getByRole('button', { name: 'Configurações' }));
+    const input = screen.getByLabelText('Servidor de mídia (opcional)');
+    expect(input).toHaveValue('');
+    expect(screen.queryByRole('button', { name: 'Usar automático' })).toBeNull();
+    await userEvent.type(input, 'ws://localhost:7880');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    expect(on).toHaveBeenCalledWith('ws://localhost:7880');
+    on.mockRejectedValueOnce(
+      new Error("Error invoking remote method 'server:setMedia': Error: Endereço inválido."),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/^Endereço inválido\.$/);
+  });
+  it('volta ao automático', async () => {
+    const on = renderHome('ws://localhost:7880');
+    await userEvent.click(screen.getByRole('button', { name: 'Configurações' }));
+    expect(screen.getByLabelText('Servidor de mídia (opcional)')).toHaveValue(
+      'ws://localhost:7880',
+    );
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Usar automático' }));
+    expect(on).toHaveBeenCalledWith(null);
+  });
+});

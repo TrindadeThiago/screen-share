@@ -3,6 +3,7 @@ import {
   DEFAULT_SERVER_URL,
   fetchMediaUrl,
   isServerConfigured,
+  normalizeMediaUrl,
   normalizeServerUrl,
   readConfigFile,
   readMediaUrl,
@@ -61,6 +62,23 @@ describe('resolveServerUrl', () => {
   it('ignora valores inválidos e cai para o próximo', () => {
     expect(resolveServerUrl({ saved: 'ftp://x', file: 'b.com' })).toBe('https://b.com');
   });
+});
+
+describe('normalizeMediaUrl', () => {
+  it.each([
+    ['ws://localhost:7880/rtc', 'ws://localhost:7880'],
+    ['  localhost:7880 ', 'ws://localhost:7880'],
+    ['wss://live.example.com', 'wss://live.example.com'],
+    ['http://100.1.2.3:7880', 'http://100.1.2.3:7880'],
+  ])('%s → %s', (input, out) => {
+    expect(normalizeMediaUrl(input)).toBe(out);
+  });
+  it.each(['', '  ', 'ftp://x', 'javascript:alert(1)', 'ws://', 7880, null])(
+    'rejeita %j',
+    (input) => {
+      expect(normalizeMediaUrl(input)).toBeNull();
+    },
+  );
 });
 
 describe('isServerConfigured', () => {

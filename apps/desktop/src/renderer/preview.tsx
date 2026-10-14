@@ -54,6 +54,7 @@ const bridge: ScreenShareBridge = {
   getServerKey: async () => null,
   setServerKey: async () => {},
   getMediaUrl: async () => null,
+  setMediaUrl: async () => {},
   logDiagnostic: async () => {},
   readDiagnostics: async () => 'linhas de diagnóstico',
   setInRoom: async () => {},

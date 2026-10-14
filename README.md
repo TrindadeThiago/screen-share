@@ -41,7 +41,7 @@ O app usa, nesta ordem:
 3. a variável de ambiente `SCREEN_SHARE_API_URL`;
 4. o padrão `https://screenshare.example.com` (placeholder).
 
-Quem hospeda o servidor no próprio PC e não o alcança pelo IP público pode acrescentar `"mediaUrl": "ws://localhost:7880"` ao `config.json` (com `apiUrl` em `http://localhost:...`).
+Quem hospeda o servidor no próprio PC e não o alcança pelo IP público usa `http://localhost:...` como endereço e preenche **Servidor de mídia** em **Configurações** com `ws://localhost:7880`. O app recarrega ao salvar, e **Usar automático** volta ao endereço informado pela API. Também dá para pôr `"mediaUrl": "ws://localhost:7880"` no `config.json`; o valor salvo no app tem prioridade.
 
 O app descobre o endereço do LiveKit sozinho, pela rota `GET /config` da API. O `config.json` é opcional: serve para mandar o `.exe` já configurado aos amigos, sem passar pela tela inicial.
 
