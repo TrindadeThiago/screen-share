@@ -2,6 +2,25 @@
 
 App desktop (Windows 10/11, `.exe` portable) para compartilhar a tela com amigos, com o áudio do computador. Sem login: crie uma sala, envie o código, os amigos entram.
 
+![Assistindo a uma transmissão, com as métricas abertas](docs/screenshots/room-watching.png)
+
+- **Tela e som do computador**, com alvo de 720p a 40 fps, por um servidor que você mesmo hospeda.
+- **Sem conta e sem instalação:** um `.exe` portable e um código de sala.
+- **Voz na mesma sala**, pelo botão do microfone ou por um atalho que funciona fora do app.
+- **Métricas ao vivo** de resolução, fps, codec e latência, para saber o que está chegando.
+
+## Telas
+
+| Tela inicial                                                                                | Escolher o que compartilhar                                              |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| ![Tela inicial com os cartões de criar sala e entrar com código](docs/screenshots/home.png) | ![Diálogo de escolha entre telas e janelas](docs/screenshots/picker.png) |
+
+| Transmitindo                                                                                         | Configurações                                              |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| ![Sala de quem transmite, com a prévia e a contagem de quem assiste](docs/screenshots/room-live.png) | ![Diálogo de configurações](docs/screenshots/settings.png) |
+
+As imagens vêm da página de pré-visualização do projeto, com dados simulados (veja [Desenvolver](#desenvolver)).
+
 ## Usar
 
 1. Baixe o `.exe` na página do servidor (veja `infra/site`). O Windows pode mostrar o aviso "app não reconhecido": _Mais informações → Executar assim mesmo_.
@@ -35,6 +54,8 @@ npm run lint
 npm run dev -w @screen-share/desktop        # renderer (Vite)
 npm run dist -w @screen-share/desktop       # gera o .exe portable (em Windows)
 ```
+
+Com o `npm run dev` rodando, `/preview.html` mostra cada tela com dados simulados, sem servidor (por exemplo `/preview.html?v=room-live`).
 
 Variáveis opcionais do app: `SCREEN_SHARE_API_URL` e `SCREEN_SHARE_MEDIA_URL` (esta só vale se a API não responder em `/config`).
 
