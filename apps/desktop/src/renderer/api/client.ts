@@ -44,7 +44,6 @@ export interface ApiClient {
   /** Pede a vez de transmitir; falha com `broadcast_busy` se outra pessoa transmite. */
   requestBroadcast(code: string, token: string): Promise<void>;
   releaseBroadcast(code: string, token: string): Promise<void>;
-  getVersion(): Promise<{ latest: string; downloadUrl: string }>;
 }
 
 export const API_URL: string =
@@ -105,6 +104,5 @@ export function createApiClient(
         method: 'POST',
         body: JSON.stringify(input),
       }),
-    getVersion: () => request('/version'),
   };
 }

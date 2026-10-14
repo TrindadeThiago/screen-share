@@ -12,7 +12,6 @@ const join = { code: 'ABCD-EFGH-IJKL-MNOP', serverUrl: 'wss://x', token: 't', ex
 const api = (over = {}) => ({
   createRoom: vi.fn().mockResolvedValue(join),
   joinRoom: vi.fn(),
-  getVersion: vi.fn(),
   ...over,
 });
 

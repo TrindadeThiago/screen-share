@@ -7,7 +7,7 @@
 ## Subir o servidor
 1. Configurar `infra/livekit.yaml` (chaves) e `infra/Caddyfile` (domínio).
 2. `docker compose -f infra/docker-compose.yml up -d`
-3. `curl https://<dominio>/version` → JSON com `latest` e `downloadUrl`.
+3. `curl https://<dominio>/config` → JSON com `mediaUrl`.
 
 ## Validar contratos da API (ver [contracts/api.openapi.yaml](contracts/api.openapi.yaml))
 1. `POST /rooms` → 201 com `code` e `token`.
@@ -18,7 +18,7 @@
 2. PC A: criar sala, copiar código, escolher tela inteira, transmitir (US1).
 3. PC B: colar o código, entrar, ver imagem e ouvir áudio; testar volume, mudo e tela cheia (US2).
 4. Medir: latência < 1 s, ~720p@40fps, áudio sincronizado (SC-003..005); repetir em rede móvel (SC-007).
-5. Publicar versão maior em `/version` e reabrir o app → aviso com link (SC-010).
+5. Publicar uma release maior no GitHub e reabrir o app → aviso com link (SC-010).
 6. Fase 3: derrubar a rede do PC B por ~20 s → reconecta sozinho (SC-008).
 
 ## Dados do plano ↔ modelo

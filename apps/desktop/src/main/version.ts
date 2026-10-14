@@ -20,20 +20,30 @@ export function compareSemver(a: string, b: string): number {
   return 0;
 }
 
-/** Consulta a versão mais recente; qualquer falha retorna null (silenciosa). */
+/** Última release publicada (rascunhos e pré-releases ficam de fora). */
+export const LATEST_RELEASE_URL =
+  'https://api.github.com/repos/TrindadeThiago/screen-share/releases/latest';
+
+/** Consulta a release mais recente no GitHub; qualquer falha retorna null (silenciosa). */
 export async function checkForUpdate(
   current: string,
-  versionUrl: string,
   fetchFn: typeof fetch = fetch,
+  releaseUrl = LATEST_RELEASE_URL,
 ): Promise<UpdateInfo | null> {
   try {
-    const res = await fetchFn(versionUrl);
+    const res = await fetchFn(releaseUrl, {
+      headers: {
+        accept: 'application/vnd.github+json',
+        'user-agent': `ScreenShare/${current}`,
+      },
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) return null;
-    const data = (await res.json()) as Partial<UpdateInfo>;
-    if (typeof data.latest !== 'string' || typeof data.downloadUrl !== 'string') return null;
-    return compareSemver(data.latest, current) > 0
-      ? { latest: data.latest, downloadUrl: data.downloadUrl }
-      : null;
+    const data = (await res.json()) as { tag_name?: unknown; html_url?: unknown };
+    if (typeof data.tag_name !== 'string' || typeof data.html_url !== 'string') return null;
+    if (!isAllowedExternalUrl(data.html_url, ['github.com'])) return null;
+    const latest = data.tag_name.replace(/^v/, '');
+    return compareSemver(latest, current) > 0 ? { latest, downloadUrl: data.html_url } : null;
   } catch {
     return null;
   }

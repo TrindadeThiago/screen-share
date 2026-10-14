@@ -34,7 +34,7 @@ describe('api client', () => {
   it('falha de rede vira ApiError network', async () => {
     const f = vi.fn().mockRejectedValue(new TypeError('fail'));
     const err = await createApiClient('https://api', f as never)
-      .getVersion()
+      .joinRoom('ABCD', { displayName: 'Ana' })
       .catch((e) => e);
     expect(err.code).toBe('network');
   });
@@ -45,7 +45,7 @@ describe('api client', () => {
       json: async () => Promise.reject(new Error('x')),
     });
     const err = await createApiClient('https://api', f as never)
-      .getVersion()
+      .joinRoom('ABCD', { displayName: 'Ana' })
       .catch((e) => e);
     expect(err.code).toBe('server_error');
   });
