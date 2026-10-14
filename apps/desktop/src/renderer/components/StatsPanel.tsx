@@ -6,12 +6,65 @@ export interface StatsSample {
   packets: number;
   packetsLost: number;
   rttMs: number | null;
+  video?: VideoInfo;
+}
+
+/** O que prova (ou não) a meta de 720p/40fps. */
+export interface VideoInfo {
+  fps?: number;
+  width?: number;
+  height?: number;
+  codec?: string;
+  /** Encoder (quem transmite) ou decoder (quem assiste) em uso. */
+  implementation?: string;
+  /** Motivo de limitação de qualidade no envio: cpu, bandwidth, other. */
+  limitation?: string;
 }
 
 export interface Metrics {
   bitrateKbps: number;
   lossPercent: number;
   rttMs: number | null;
+  video?: VideoInfo;
+}
+
+interface RtcStat {
+  type?: string;
+  kind?: string;
+  [k: string]: any;
+}
+
+/**
+ * Extrai uma amostra de um RTCStatsReport de vídeo (envio ou recepção).
+ * Com simulcast há vários outbound-rtp: vale a camada de maior resolução.
+ */
+export function sampleFromReport(report: Iterable<RtcStat>, now = Date.now()): StatsSample | null {
+  const all = Array.from(report);
+  const video = (type: string) => all.filter((s) => s.type === type && s.kind === 'video');
+  const area = (s: RtcStat) => (s.frameWidth ?? 0) * (s.frameHeight ?? 0);
+  const out = video('outbound-rtp').sort((a, b) => area(b) - area(a))[0];
+  const s = out ?? video('inbound-rtp')[0];
+  if (!s) return null;
+  const remote = out && all.find((r) => r.type === 'remote-inbound-rtp' && r.localId === out.id);
+  const codec = all.find((r) => r.type === 'codec' && r.id === s.codecId)?.mimeType as
+    string | undefined;
+  const rtt = remote?.roundTripTime;
+  const limitation = s.qualityLimitationReason as string | undefined;
+  return {
+    timestamp: now,
+    bytes: s.bytesSent ?? s.bytesReceived ?? 0,
+    packets: s.packetsSent ?? s.packetsReceived ?? 0,
+    packetsLost: remote?.packetsLost ?? s.packetsLost ?? 0,
+    rttMs: rtt != null ? Math.round(rtt * 1000) : null,
+    video: {
+      fps: s.framesPerSecond,
+      width: s.frameWidth,
+      height: s.frameHeight,
+      codec: codec?.replace(/^video\//, ''),
+      implementation: s.encoderImplementation ?? s.decoderImplementation,
+      limitation: limitation && limitation !== 'none' ? limitation : undefined,
+    },
+  };
 }
 
 export function computeMetrics(prev: StatsSample, curr: StatsSample): Metrics {
@@ -24,8 +77,15 @@ export function computeMetrics(prev: StatsSample, curr: StatsSample): Metrics {
     bitrateKbps: Math.round(bitrateKbps),
     lossPercent: total > 0 ? Math.round((dLost / total) * 1000) / 10 : 0,
     rttMs: curr.rttMs,
+    ...(curr.video ? { video: curr.video } : {}),
   };
 }
+
+const LIMITATION_TEXT: Record<string, string> = {
+  cpu: 'processador',
+  bandwidth: 'rede',
+  other: 'outro motivo',
+};
 
 export function StatsPanel({
   readSample,
@@ -49,6 +109,7 @@ export function StatsPanel({
   }, [readSample, intervalMs]);
 
   if (!metrics) return <p>Coletando métricas…</p>;
+  const v = metrics.video;
   return (
     <dl aria-label="Métricas de conexão">
       <dt>Taxa de bits</dt>
@@ -57,6 +118,23 @@ export function StatsPanel({
       <dd>{metrics.lossPercent}%</dd>
       <dt>Latência (RTT)</dt>
       <dd>{metrics.rttMs === null ? '—' : `${metrics.rttMs} ms`}</dd>
+      {v && (
+        <>
+          <dt>Vídeo</dt>
+          <dd>
+            {v.width && v.height ? `${v.width}×${v.height}` : '—'}
+            {v.fps != null && ` a ${Math.round(v.fps)} fps`}
+          </dd>
+          <dt>Codec</dt>
+          <dd>{[v.codec, v.implementation].filter(Boolean).join(' · ') || '—'}</dd>
+          {v.limitation && (
+            <>
+              <dt>Qualidade limitada por</dt>
+              <dd>{LIMITATION_TEXT[v.limitation] ?? v.limitation}</dd>
+            </>
+          )}
+        </>
+      )}
     </dl>
   );
 }

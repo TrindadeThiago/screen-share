@@ -27,6 +27,9 @@ export function createWindowOptions(preloadPath: string) {
       sandbox: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
+      // Quem transmite costuma deixar o app minimizado atrás de um jogo; sem isso o
+      // Chromium reduz os timers da janela e a transmissão pode degradar.
+      backgroundThrottling: false,
     },
   };
 }

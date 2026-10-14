@@ -4,6 +4,8 @@ import {
   fetchMediaUrl,
   normalizeServerUrl,
   readConfigFile,
+  readMediaUrl,
+  readServerKey,
   resolveServerUrl,
 } from '../../src/main/config';
 
@@ -77,5 +79,28 @@ describe('fetchMediaUrl', () => {
     expect(await fetchMediaUrl('https://api', ok({}) as never)).toBeNull();
     expect(await fetchMediaUrl('https://api', ok({ mediaUrl: 'ftp://x' }) as never)).toBeNull();
     expect(await fetchMediaUrl('https://api', ok({ mediaUrl: 'nota url' }) as never)).toBeNull();
+  });
+});
+
+describe('config.json: mediaUrl e serverKey', () => {
+  const file = (o: unknown) => () => JSON.stringify(o);
+  it('lê mediaUrl ws/http e devolve a origem', () => {
+    expect(readMediaUrl('/x', file({ mediaUrl: 'ws://localhost:7880/rtc' }))).toBe(
+      'ws://localhost:7880',
+    );
+    expect(readMediaUrl('/x', file({ mediaUrl: 'https://live.example.com' }))).toBe(
+      'https://live.example.com',
+    );
+  });
+  it('ignora mediaUrl ausente, inválido ou de outro esquema', () => {
+    expect(readMediaUrl('/x', file({}))).toBeNull();
+    expect(readMediaUrl('/x', file({ mediaUrl: 'ftp://x' }))).toBeNull();
+    expect(readMediaUrl('/x', file({ mediaUrl: 42 }))).toBeNull();
+    expect(readMediaUrl('/x', () => 'não é json')).toBeNull();
+  });
+  it('lê serverKey quando é texto não vazio', () => {
+    expect(readServerKey('/x', file({ serverKey: 'abc' }))).toBe('abc');
+    expect(readServerKey('/x', file({ serverKey: '' }))).toBeNull();
+    expect(readServerKey('/x', file({}))).toBeNull();
   });
 });

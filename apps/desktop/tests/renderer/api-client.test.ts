@@ -49,4 +49,24 @@ describe('api client', () => {
       .catch((e) => e);
     expect(err.code).toBe('server_error');
   });
+  it('envia a chave do servidor só ao criar sala', async () => {
+    const f = res(201, {});
+    const client = createApiClient('https://api', f as never, 'chave');
+    await client.createRoom({ displayName: 'Ana' });
+    expect(f.mock.calls[0]![1].headers).toMatchObject({ 'x-server-key': 'chave' });
+    await client.joinRoom('x', { displayName: 'B', rejoinToken: 'antigo' });
+    expect(f.mock.calls[1]![1].headers).not.toHaveProperty('x-server-key');
+    expect(f.mock.calls[1]![1].body).toContain('"rejoinToken":"antigo"');
+  });
+  it('pede e devolve a transmissão (respostas 204 sem corpo)', async () => {
+    const f = vi.fn().mockResolvedValue({ ok: true, status: 204, json: async () => null });
+    const client = createApiClient('https://api', f as never);
+    await expect(client.requestBroadcast('AB', 'tok')).resolves.toBeUndefined();
+    await client.releaseBroadcast('AB', 'tok');
+    expect(f.mock.calls.map((c) => c[0])).toEqual([
+      'https://api/rooms/AB/broadcast',
+      'https://api/rooms/AB/broadcast/stop',
+    ]);
+    expect(f.mock.calls[0]![1].body).toBe('{"token":"tok"}');
+  });
 });

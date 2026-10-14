@@ -13,10 +13,17 @@ interface Session {
 export function App() {
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const api = useMemo(() => (serverUrl ? createApiClient(serverUrl) : null), [serverUrl]);
+  const [serverKey, setServerKey] = useState<string | null>(null);
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const api = useMemo(
+    () => (serverUrl ? createApiClient(serverUrl, undefined, serverKey) : null),
+    [serverUrl, serverKey],
+  );
 
   useEffect(() => {
     window.screenShare.getServerUrl().then(setServerUrl);
+    window.screenShare.getServerKey().then(setServerKey, () => {});
+    window.screenShare.getMediaUrl().then(setMediaUrl, () => {});
   }, []);
 
   if (!serverUrl || !api) return <p role="status">Carregando…</p>;
@@ -24,7 +31,7 @@ export function App() {
     <>
       <UpdateBanner />
       {session ? (
-        <Room {...session} api={api} onLeave={() => setSession(null)} />
+        <Room {...session} api={api} mediaUrl={mediaUrl} onLeave={() => setSession(null)} />
       ) : (
         <Home
           api={api}

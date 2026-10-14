@@ -12,6 +12,10 @@ function setup() {
     openExternal: vi.fn().mockResolvedValue(undefined),
     checkForUpdate: vi.fn().mockResolvedValue(null),
     prefs: { get: vi.fn().mockReturnValue({}), set: vi.fn() },
+    getServerKey: () => 'chave',
+    getMediaUrl: () => 'ws://localhost:7880',
+    diagnostics: { log: vi.fn(), tail: vi.fn().mockReturnValue('linhas') },
+    setInRoom: vi.fn(),
   };
   registerIpc({ handle: (c, l) => void handlers.set(c, l) }, deps as never);
   return { call: (c: string, ...a: unknown[]) => handlers.get(c)!({}, ...a), deps };
@@ -41,15 +45,29 @@ describe('ipc', () => {
     await call('server:set', 'http://100.1.2.3:3000');
     expect(deps.setServerUrl).toHaveBeenCalledWith('http://100.1.2.3:3000');
   });
+  it('expõe chave do servidor, diagnóstico e presença em sala', async () => {
+    const { call, deps } = setup();
+    expect(await call('server:key')).toBe('chave');
+    expect(await call('server:media')).toBe('ws://localhost:7880');
+    await call('diag:log', 'oi');
+    expect(deps.diagnostics.log).toHaveBeenCalledWith('oi');
+    expect(await call('diag:read')).toBe('linhas');
+    await call('room:active', 'sim');
+    expect(deps.setInRoom).toHaveBeenLastCalledWith(false);
+    await call('room:active', true);
+    expect(deps.setInRoom).toHaveBeenLastCalledWith(true);
+  });
   it('sanitiza preferências', () => {
     expect(
       sanitizePreferences({ volume: 5, preset: 'x', displayName: 'a'.repeat(50), evil: 1 }),
     ).toEqual({
       displayName: 'a'.repeat(32),
     });
-    expect(sanitizePreferences({ volume: 0.5, preset: 'motion' })).toEqual({
+    expect(sanitizePreferences({ volume: 0.5, preset: 'motion', simulcast: false })).toEqual({
       volume: 0.5,
       preset: 'motion',
+      simulcast: false,
     });
+    expect(sanitizePreferences({ simulcast: 'no' })).toEqual({});
   });
 });

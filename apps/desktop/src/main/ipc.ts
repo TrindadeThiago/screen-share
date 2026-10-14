@@ -15,6 +15,10 @@ export interface IpcDeps {
   openExternal(url: string): Promise<void>;
   checkForUpdate(): Promise<UpdateInfo | null>;
   prefs: { get(): Preferences; set(p: Preferences): void };
+  getServerKey(): string | null;
+  getMediaUrl(): string | null;
+  diagnostics: { log(message: unknown): void; tail(): string };
+  setInRoom(inRoom: boolean): void;
 }
 
 export function sanitizePreferences(p: unknown): Preferences {
@@ -24,6 +28,9 @@ export function sanitizePreferences(p: unknown): Preferences {
   if (typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 1) out.volume = o.volume;
   if (o.preset === 'motion' || o.preset === 'detail') out.preset = o.preset;
   if (typeof o.pushToTalkKey === 'string') out.pushToTalkKey = o.pushToTalkKey.slice(0, 32);
+  if (typeof o.simulcast === 'boolean') out.simulcast = o.simulcast;
+  if (typeof o.muteVoicesWhileSharing === 'boolean')
+    out.muteVoicesWhileSharing = o.muteVoicesWhileSharing;
   return out;
 }
 
@@ -47,4 +54,9 @@ export function registerIpc(ipcMain: IpcMainLike, d: IpcDeps): void {
   });
   ipcMain.handle('prefs:get', () => d.prefs.get());
   ipcMain.handle('prefs:set', (_e, p: unknown) => d.prefs.set(sanitizePreferences(p)));
+  ipcMain.handle('server:key', () => d.getServerKey());
+  ipcMain.handle('server:media', () => d.getMediaUrl());
+  ipcMain.handle('diag:log', (_e, message: unknown) => d.diagnostics.log(message));
+  ipcMain.handle('diag:read', () => d.diagnostics.tail());
+  ipcMain.handle('room:active', (_e, inRoom: unknown) => d.setInRoom(inRoom === true));
 }

@@ -7,12 +7,19 @@ export const RoomEvent = {
   ActiveSpeakersChanged: 'activeSpeakersChanged',
   TrackSubscribed: 'trackSubscribed',
   TrackUnsubscribed: 'trackUnsubscribed',
+  LocalTrackUnpublished: 'localTrackUnpublished',
+  ParticipantPermissionsChanged: 'participantPermissionsChanged',
+  ConnectionQualityChanged: 'connectionQualityChanged',
   Reconnecting: 'reconnecting',
   Reconnected: 'reconnected',
   Disconnected: 'disconnected',
 };
 export const Track = {
-  Source: { ScreenShare: 'screen_share', ScreenShareAudio: 'screen_share_audio' },
+  Source: {
+    ScreenShare: 'screen_share',
+    ScreenShareAudio: 'screen_share_audio',
+    Microphone: 'microphone',
+  },
 };
 
 export class FakeRoom extends EventEmitter {
@@ -30,6 +37,8 @@ export class FakeRoom extends EventEmitter {
     identity: 'me',
     name: 'Eu',
     isSpeaking: false,
+    // 2 = microfone, 3 = tela (TrackSource do protocolo); testes de permissão trocam isto.
+    permissions: { canPublishSources: [2, 3] },
     setScreenShareEnabled: vi.fn().mockResolvedValue(undefined),
     setMicrophoneEnabled: vi.fn().mockResolvedValue(undefined),
     getTrackPublication: vi.fn(),

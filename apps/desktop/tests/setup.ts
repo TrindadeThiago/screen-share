@@ -20,6 +20,12 @@ export function installScreenShareMock(overrides: Record<string, unknown> = {}) 
     getServerUrl: vi.fn().mockResolvedValue('https://api.example.com'),
     setServerUrl: vi.fn().mockResolvedValue(undefined),
     checkForUpdate: vi.fn().mockResolvedValue(null),
+    getServerKey: vi.fn().mockResolvedValue(null),
+    getMediaUrl: vi.fn().mockResolvedValue(null),
+    logDiagnostic: vi.fn().mockResolvedValue(undefined),
+    readDiagnostics: vi.fn().mockResolvedValue(''),
+    setInRoom: vi.fn().mockResolvedValue(undefined),
+    onMicToggle: vi.fn().mockReturnValue(() => {}),
     ...overrides,
   };
   (window as unknown as { screenShare: unknown }).screenShare = mock;
