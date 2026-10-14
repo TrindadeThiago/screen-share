@@ -4,6 +4,8 @@ paths:
   /rooms:
     post:
       summary: Cria sala (FR-001, FR-002, FR-022)
+      parameters:
+        - {name: x-server-key, in: header, required: false, schema: {type: string}, description: Obrigatória quando o servidor define ROOM_CREATION_KEY}
       requestBody:
         required: true
         content:
@@ -23,6 +25,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/JoinResult'}
         '400': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}   # chave do servidor ausente ou errada
         '429': {$ref: '#/components/responses/Error'}
   /rooms/{code}/token:
     post:
@@ -39,6 +42,7 @@ paths:
               properties:
                 displayName: {type: string, minLength: 1, maxLength: 32}
                 password: {type: string}
+                rejoinToken: {type: string, description: Token anterior desta sala; mantém a identidade na reentrada}
       responses:
         '200':
           description: Token emitido
@@ -50,6 +54,33 @@ paths:
         '409': {$ref: '#/components/responses/Error'}   # sala lotada
         '410': {$ref: '#/components/responses/Error'}   # sala expirada
         '429': {$ref: '#/components/responses/Error'}
+  /rooms/{code}/broadcast:
+    post:
+      summary: Pede a vez de transmitir a tela (um transmissor por vez)
+      parameters:
+        - {name: code, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TokenProof'}
+      responses:
+        '204': {description: Permissão concedida a quem pediu}
+        '401': {$ref: '#/components/responses/Error'}   # token inválido ou fora da sala
+        '409': {$ref: '#/components/responses/Error'}   # outra pessoa está transmitindo
+  /rooms/{code}/broadcast/stop:
+    post:
+      summary: Devolve a vez de transmitir
+      parameters:
+        - {name: code, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TokenProof'}
+      responses:
+        '204': {description: Permissão devolvida}
+        '401': {$ref: '#/components/responses/Error'}
   /version:
     get:
       summary: Versão mais recente do app (FR-016)
@@ -77,6 +108,11 @@ paths:
                   mediaUrl: {type: string, example: 'wss://live.example.com'}
 components:
   schemas:
+    TokenProof:
+      type: object
+      required: [token]
+      properties:
+        token: {type: string, description: Token recebido ao entrar nesta sala}
     JoinResult:
       type: object
       required: [code, serverUrl, token, expiresAt]
@@ -94,5 +130,5 @@ components:
             type: object
             required: [error, message]
             properties:
-              error: {type: string, enum: [invalid_request, wrong_password, room_not_found, room_full, room_expired, rate_limited, server_error]}
+              error: {type: string, enum: [invalid_request, wrong_password, room_not_found, room_full, room_expired, server_key_required, invalid_token, broadcast_busy, rate_limited, server_error]}
               message: {type: string, description: mensagem legível em português}
