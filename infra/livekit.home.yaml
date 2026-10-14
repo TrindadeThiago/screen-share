@@ -1,0 +1,14 @@
+# Teste em casa (sem domínio).
+port: 7880
+rtc:
+  tcp_port: 7881
+  # Toda a mídia UDP por uma porta só: roteadores domésticos nem sempre aceitam faixas.
+  udp_port: 7882
+  # Anuncia o IP público (NODE_IP, vindo de PUBLIC_IP no .env) para os amigos e também os
+  # endereços locais, para o app de quem hospeda conectar pelo próprio PC: o roteador
+  # doméstico não devolve conexões feitas de dentro para o IP público.
+  use_external_ip: false
+  advertise_internal_ip: true
+  enable_loopback_candidate: true
+logging:
+  level: info

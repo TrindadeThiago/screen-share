@@ -1,6 +1,6 @@
 services:
   livekit:
-    image: livekit/livekit-server:latest
+    image: livekit/livekit-server:v1.13.9 # versão fixa: atualize de propósito, não a cada deploy
     command: --config /etc/livekit.yaml
     restart: unless-stopped
     environment:
@@ -11,8 +11,8 @@ services:
     ports:
       - '7881:7881/tcp'
       - '3478:3478/udp'
-      - '5349:5349/tcp'
       - '50000-50100:50000-50100/udp'
+      - '50101-50200:50101-50200/udp' # relay do TURN
 
   api:
     build:
@@ -27,6 +27,7 @@ services:
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
       VERSION_FILE: /config/version.json
+      ROOM_CREATION_KEY: ${ROOM_CREATION_KEY:-}
     volumes:
       - api-data:/data
       - ./version.json:/config/version.json:ro
