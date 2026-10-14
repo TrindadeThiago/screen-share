@@ -3,9 +3,11 @@ import type { Db } from '../db.js';
 import { AppError } from '../errors.js';
 import type { MediaGateway } from '../livekit.js';
 import { formatCode, generateRoomCode, normalizeCode } from '../room-code.js';
-import { issueToken } from './tokens.js';
+import { issueToken, readToken } from './tokens.js';
 
 export interface RoomDeps {
+  /** Se definida, criar sala exige esta chave (quem tem o código entra sem ela). */
+  roomCreationKey?: string;
   db: Db;
   media: MediaGateway;
   now: () => number;
@@ -55,12 +57,13 @@ async function result(
   code: string,
   name: string,
   expiresAt: number,
+  identity: string = randomUUID(),
 ): Promise<JoinResult> {
   const token = await issueToken({
     apiKey: d.apiKey,
     apiSecret: d.apiSecret,
     room: code,
-    identity: randomUUID(),
+    identity,
     name,
     ttlSeconds: d.tokenTtlSeconds,
   });
@@ -96,7 +99,7 @@ export async function createRoom(d: RoomDeps, input: CreateRoomInput): Promise<J
 export async function joinRoom(
   d: RoomDeps,
   rawCode: string,
-  input: { displayName: string; password?: string },
+  input: { displayName: string; password?: string; rejoinToken?: string },
 ): Promise<JoinResult> {
   const code = normalizeCode(rawCode);
   if (!code) throw new AppError('room_not_found');
@@ -109,7 +112,41 @@ export async function joinRoom(
   if (row.password_hash && !(input.password && verifyPassword(input.password, row.password_hash))) {
     throw new AppError('wrong_password');
   }
-  if ((await d.media.countParticipants(code)) >= row.max_participants)
-    throw new AppError('room_full');
-  return result(d, code, input.displayName, row.expires_at);
+  // Reentrada: quem prova que já estava nesta sala mantém a identidade. O LiveKit troca a
+  // sessão antiga pela nova, então ela não vira "fantasma" nem conta contra o limite.
+  const previous = input.rejoinToken ? readToken(input.rejoinToken, d.apiSecret) : null;
+  const identity = previous?.room === code ? previous.identity : undefined;
+  const others = (await d.media.listParticipants(code)).filter((p) => p.identity !== identity);
+  if (others.length >= row.max_participants) throw new AppError('room_full');
+  return result(d, code, input.displayName, row.expires_at, identity);
+}
+
+/** Identifica quem chama a partir do token recebido ao entrar nesta sala. */
+function caller(d: RoomDeps, rawCode: string, token: string): { code: string; identity: string } {
+  const code = normalizeCode(rawCode);
+  const who = readToken(token, d.apiSecret);
+  if (!code || !who || who.room !== code) throw new AppError('invalid_token');
+  return { code, identity: who.identity };
+}
+
+/**
+ * Concede a transmissão a quem pede, se ninguém mais estiver transmitindo.
+ * Quem tinha a permissão e não está usando a perde, para valer "um transmissor por vez".
+ */
+export async function requestBroadcast(d: RoomDeps, rawCode: string, token: string): Promise<void> {
+  const { code, identity } = caller(d, rawCode, token);
+  const participants = await d.media.listParticipants(code);
+  if (!participants.some((p) => p.identity === identity)) throw new AppError('invalid_token');
+  const others = participants.filter((p) => p.identity !== identity);
+  if (others.some((p) => p.sharingScreen)) throw new AppError('broadcast_busy');
+  for (const p of others.filter((o) => o.mayShareScreen))
+    await d.media.setScreenShareAllowed(code, p.identity, false);
+  await d.media.setScreenShareAllowed(code, identity, true);
+}
+
+/** Devolve a permissão de transmitir (ao parar de compartilhar). */
+export async function releaseBroadcast(d: RoomDeps, rawCode: string, token: string): Promise<void> {
+  const { code, identity } = caller(d, rawCode, token);
+  const me = (await d.media.listParticipants(code)).find((p) => p.identity === identity);
+  if (me?.mayShareScreen) await d.media.setScreenShareAllowed(code, identity, false);
 }

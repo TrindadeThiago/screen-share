@@ -7,6 +7,7 @@ export interface Config {
   apiSecret: string;
   versionFile: string;
   tokenTtlSeconds: number;
+  roomCreationKey?: string;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -24,5 +25,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     apiSecret: need('LIVEKIT_API_SECRET'),
     versionFile: env.VERSION_FILE ?? './version.json',
     tokenTtlSeconds: Number(env.TOKEN_TTL_SECONDS ?? 600),
+    ...(env.ROOM_CREATION_KEY ? { roomCreationKey: env.ROOM_CREATION_KEY } : {}),
   };
 }

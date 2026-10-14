@@ -20,6 +20,7 @@ const app = await buildApp({
   livekitUrl: cfg.livekitUrl,
   tokenTtlSeconds: cfg.tokenTtlSeconds,
   versionFile: cfg.versionFile,
+  ...(cfg.roomCreationKey ? { roomCreationKey: cfg.roomCreationKey } : {}),
 });
 
 setInterval(() => void expireRooms(db, media, Date.now()).catch(() => {}), 60_000).unref();

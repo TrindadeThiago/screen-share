@@ -6,6 +6,9 @@ export type ErrorCode =
   | 'room_not_found'
   | 'room_full'
   | 'room_expired'
+  | 'server_key_required'
+  | 'invalid_token'
+  | 'broadcast_busy'
   | 'rate_limited'
   | 'server_error';
 
@@ -15,6 +18,9 @@ const STATUS: Record<ErrorCode, number> = {
   room_not_found: 404,
   room_full: 409,
   room_expired: 410,
+  server_key_required: 403,
+  invalid_token: 401,
+  broadcast_busy: 409,
   rate_limited: 429,
   server_error: 500,
 };
@@ -25,6 +31,9 @@ const MESSAGE: Record<ErrorCode, string> = {
   room_not_found: 'Sala não encontrada. Confira o código.',
   room_full: 'A sala está lotada.',
   room_expired: 'Esta sala expirou.',
+  server_key_required: 'Este servidor exige uma chave para criar salas. Peça a quem o administra.',
+  invalid_token: 'Sessão inválida. Entre na sala novamente.',
+  broadcast_busy: 'Outra pessoa já está transmitindo nesta sala.',
   rate_limited: 'Muitas tentativas. Aguarde um pouco e tente de novo.',
   server_error: 'Erro interno do servidor.',
 };

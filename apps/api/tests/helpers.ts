@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream';
 import { openDb } from '../src/db.js';
-import type { MediaGateway } from '../src/livekit.js';
+import type { MediaGateway, RoomParticipant } from '../src/livekit.js';
 import { buildApp, type AppDeps } from '../src/server.js';
 import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -10,9 +10,25 @@ export const KEY = 'devkey';
 export const SECRET = 'a-very-long-secret-for-tests-0123456789';
 
 export function fakeMedia(count = 0) {
-  const state = { count, closed: [] as string[] };
+  const state = {
+    count,
+    closed: [] as string[],
+    /** Participantes explícitos; se vazio, `count` gera anônimos. */
+    participants: [] as RoomParticipant[],
+  };
   const media: MediaGateway = {
-    countParticipants: async () => state.count,
+    listParticipants: async () =>
+      state.participants.length
+        ? state.participants
+        : Array.from({ length: state.count }, (_, i) => ({
+            identity: `anon-${i}`,
+            sharingScreen: false,
+            mayShareScreen: false,
+          })),
+    setScreenShareAllowed: async (_r, identity, allowed) => {
+      const p = state.participants.find((x) => x.identity === identity);
+      if (p) p.mayShareScreen = allowed;
+    },
     closeRoom: async (r) => void state.closed.push(r),
   };
   return { media, state };
