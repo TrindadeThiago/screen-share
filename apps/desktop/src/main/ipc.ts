@@ -29,6 +29,7 @@ export function sanitizePreferences(p: unknown): Preferences {
   if (o.preset === 'motion' || o.preset === 'detail') out.preset = o.preset;
   if (typeof o.pushToTalkKey === 'string') out.pushToTalkKey = o.pushToTalkKey.slice(0, 32);
   if (typeof o.simulcast === 'boolean') out.simulcast = o.simulcast;
+  if (typeof o.pushToTalk === 'boolean') out.pushToTalk = o.pushToTalk;
   if (typeof o.muteVoicesWhileSharing === 'boolean')
     out.muteVoicesWhileSharing = o.muteVoicesWhileSharing;
   return out;

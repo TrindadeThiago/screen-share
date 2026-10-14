@@ -69,5 +69,6 @@ describe('ipc', () => {
       simulcast: false,
     });
     expect(sanitizePreferences({ simulcast: 'no' })).toEqual({});
+    expect(sanitizePreferences({ pushToTalk: true })).toEqual({ pushToTalk: true });
   });
 });

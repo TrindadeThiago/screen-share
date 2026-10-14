@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+
+/* Tema escuro único. Os nomes dizem o papel da cor, não o tom. */
+@theme {
+  --color-app: #1a1b1f;
+  --color-panel: #23252b;
+  --color-raised: #2d3038;
+  --color-hover: #383c46;
+  --color-line: #3a3e48;
+  --color-ink: #f1f2f5;
+  --color-soft: #b4b9c4;
+  --color-faint: #7f8591;
+  --color-accent: #6d7cff;
+  --color-accent-strong: #5a69f0;
+  --color-live: #f04e55;
+  --color-ok: #3fb574;
+  --color-warn: #f0b545;
+  --color-stage: #0c0d10;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Controles nativos (lista do seletor, setas de número, barras de rolagem) também escuros. */
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--color-app);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+input,
+select,
+[data-selectable] {
+  user-select: text;
+}
+
+/* Foco visível só para quem navega pelo teclado. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+input[type='range'] {
+  accent-color: var(--color-accent);
+}
