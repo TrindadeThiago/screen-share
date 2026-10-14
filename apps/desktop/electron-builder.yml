@@ -2,6 +2,9 @@ appId: com.screenshare.app
 productName: ScreenShare
 directories:
   output: release
+# O app não tem módulos nativos e o Vite já empacota as dependências em dist/. Sem isto, o
+# electron-builder reinstala só as de produção e, num workspace npm, apaga as de build da raiz.
+npmRebuild: false
 files:
   - dist/**
   - package.json
