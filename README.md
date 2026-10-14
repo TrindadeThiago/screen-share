@@ -23,7 +23,7 @@ As imagens vêm da página de pré-visualização do projeto, com dados simulado
 
 ## Usar
 
-1. Baixe o `.exe` na página do servidor (veja `infra/site`). O Windows pode mostrar o aviso "app não reconhecido": _Mais informações → Executar assim mesmo_.
+1. Baixe o `ScreenShare-portable.exe` da [última release](https://github.com/TrindadeThiago/screen-share/releases/latest). O Windows pode mostrar o aviso "app não reconhecido": _Mais informações → Executar assim mesmo_.
 2. Digite seu nome e **Criar sala**; copie o código e envie. Para entrar, cole o código e clique em **Entrar**.
 3. **Compartilhar tela** → escolha uma tela inteira (com áudio) ou uma janela (sem áudio).
 4. **Eco:** ao transmitir uma tela inteira, o app envia todo o som do computador, inclusive as vozes dos amigos tocadas por ele; fone de ouvido não evita isso. Marque _Silenciar as vozes para mim enquanto transmito_ para eliminar o eco.
@@ -60,6 +60,14 @@ npm run dist -w @screen-share/desktop       # gera o .exe portable (em Windows)
 Com o `npm run dev` rodando, `/preview.html` mostra cada tela com dados simulados, sem servidor (por exemplo `/preview.html?v=room-live`).
 
 Variáveis opcionais do app: `SCREEN_SHARE_API_URL` e `SCREEN_SHARE_MEDIA_URL` (esta só vale se a API não responder em `/config`).
+
+## Versões e releases
+
+A versão do app é a de `apps/desktop/package.json`. Quando um PR que muda essa versão entra na `main`, o GitHub Actions gera o `.exe` no Windows e publica a release `v<versão>` com ele e as notas geradas pelos PRs. Merges que não mudam a versão só rodam lint e testes; no PR, o resumo do job `version` diz se o merge vai publicar uma release.
+
+Para lançar uma versão, aumente-a no PR (`npm version <patch|minor|major> -w @screen-share/desktop --no-git-tag-version`): patch para correções, minor para funcionalidades novas, major para mudanças incompatíveis.
+
+Ao abrir, o app consulta a última release no GitHub e mostra um aviso com o link quando há versão nova.
 
 ## Servidor
 

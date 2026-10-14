@@ -2,9 +2,6 @@ import { Writable } from 'node:stream';
 import { openDb } from '../src/db.js';
 import type { MediaGateway, RoomParticipant } from '../src/livekit.js';
 import { buildApp, type AppDeps } from '../src/server.js';
-import { writeFileSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 
 export const KEY = 'devkey';
 export const SECRET = 'a-very-long-secret-for-tests-0123456789';
@@ -37,12 +34,6 @@ export function fakeMedia(count = 0) {
 export function makeDeps(over: Partial<AppDeps> = {}) {
   const { media, state } = fakeMedia();
   const clock = { t: 1_700_000_000_000 };
-  const dir = mkdtempSync(join(tmpdir(), 'ss-'));
-  const versionFile = join(dir, 'version.json');
-  writeFileSync(
-    versionFile,
-    JSON.stringify({ latest: '1.2.0', downloadUrl: 'https://example.com/app.exe' }),
-  );
   const deps: AppDeps = {
     db: openDb(':memory:'),
     media,
@@ -51,7 +42,6 @@ export function makeDeps(over: Partial<AppDeps> = {}) {
     apiSecret: SECRET,
     livekitUrl: 'wss://live.example.com',
     tokenTtlSeconds: 600,
-    versionFile,
     logLevel: 'silent',
     ...over,
   };

@@ -2,7 +2,10 @@ name: ci-release
 on:
   push:
     branches: [main]
-    tags: ['v*']
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -13,10 +16,35 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+
+  # A versão de apps/desktop/package.json decide a release: se a tag v<versão> ainda não
+  # existe, o merge na main gera o .exe e publica a release. No PR, só avisa o que vai acontecer.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          version=$(node -p "require('./apps/desktop/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "A versão $version já foi publicada: o merge não gera release." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "O merge na main publica a release v$version com o .exe." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   portable:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: test
+    if: github.event_name == 'push' && needs.version.outputs.release == 'true'
+    needs: [test, version]
     runs-on: windows-latest
+    permissions:
+      contents: write
+    concurrency: { group: release, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,4 +53,9 @@ jobs:
       - run: npm run dist -w @screen-share/desktop
       - uses: softprops/action-gh-release@v2
         with:
-          files: apps/desktop/release/*.exe
+          tag_name: v${{ needs.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: ScreenShare ${{ needs.version.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: apps/desktop/release/ScreenShare-portable.exe

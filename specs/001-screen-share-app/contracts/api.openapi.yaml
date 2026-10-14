@@ -81,19 +81,6 @@ paths:
       responses:
         '204': {description: Permissão devolvida}
         '401': {$ref: '#/components/responses/Error'}
-  /version:
-    get:
-      summary: Versão mais recente do app (FR-016)
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [latest, downloadUrl]
-                properties:
-                  latest: {type: string, example: 1.2.0}
-                  downloadUrl: {type: string, format: uri}
   /config:
     get:
       summary: Endereço do servidor de mídia

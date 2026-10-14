@@ -8,15 +8,8 @@
 	handle /config {
 		reverse_proxy api:3000
 	}
-	handle /version {
-		reverse_proxy api:3000
-	}
 
-	# Página de download do .exe
-	handle /download/* {
-		root * /srv/site
-		file_server
-	}
+	# Página de download (o .exe vem da última release no GitHub)
 	handle {
 		root * /srv/site
 		file_server

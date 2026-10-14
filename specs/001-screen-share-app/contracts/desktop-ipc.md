@@ -17,7 +17,7 @@ Exposto ao renderer apenas via `contextBridge` como `window.screenShare`. Sem ac
 | `logDiagnostic(message)` / `readDiagnostics()` | renderer → main | Log rotativo em `userData/logs/diagnostics.log`; códigos de sala e tokens são removidos |
 | `setInRoom(inRoom)` | renderer → main | Na sala: impede a tela de dormir e registra o atalho global `Ctrl+Shift+M` |
 | `onMicToggle(callback): () => void` | main → renderer | Atalho global pressionado: liga/desliga o microfone aberto |
-| `checkForUpdate(): Promise<{latest, downloadUrl} \| null>` | renderer → main | Consulta `GET /version` no main; falhas retornam `null` |
+| `checkForUpdate(): Promise<{latest, downloadUrl} \| null>` | renderer → main | Consulta a última release do GitHub (`api.github.com/repos/TrindadeThiago/screen-share/releases/latest`) no main; `downloadUrl` é a página da release, só em `github.com`; falhas retornam `null` |
 
 Push-to-talk (segurar a tecla) é tratado no renderer e só funciona com o app em foco: o Electron não informa a soltura de teclas globais sem módulo nativo. Com o app em segundo plano, o atalho global alterna o microfone aberto.
 

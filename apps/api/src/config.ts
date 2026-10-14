@@ -5,7 +5,6 @@ export interface Config {
   livekitApiUrl: string; // URL http usada pelo servidor
   apiKey: string;
   apiSecret: string;
-  versionFile: string;
   tokenTtlSeconds: number;
   roomCreationKey?: string;
 }
@@ -23,7 +22,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     livekitApiUrl: env.LIVEKIT_API_URL ?? need('LIVEKIT_URL').replace(/^ws/, 'http'),
     apiKey: need('LIVEKIT_API_KEY'),
     apiSecret: need('LIVEKIT_API_SECRET'),
-    versionFile: env.VERSION_FILE ?? './version.json',
     tokenTtlSeconds: Number(env.TOKEN_TTL_SECONDS ?? 600),
     ...(env.ROOM_CREATION_KEY ? { roomCreationKey: env.ROOM_CREATION_KEY } : {}),
   };

@@ -122,7 +122,7 @@ async function createWindow() {
       win.webContents.reload();
     },
     openExternal: (url) => shell.openExternal(url),
-    checkForUpdate: () => checkForUpdate(app.getVersion(), `${serverUrl}/version`),
+    checkForUpdate: () => checkForUpdate(app.getVersion()),
     prefs: store.prefs,
     isServerConfigured: () => configured,
     getServerKey: () =>

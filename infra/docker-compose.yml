@@ -26,11 +26,9 @@ services:
       LIVEKIT_API_URL: http://livekit:7880
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
-      VERSION_FILE: /config/version.json
       ROOM_CREATION_KEY: ${ROOM_CREATION_KEY:-}
     volumes:
       - api-data:/data
-      - ./version.json:/config/version.json:ro
     depends_on: [livekit]
 
   caddy:

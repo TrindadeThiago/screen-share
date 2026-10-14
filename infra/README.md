@@ -6,7 +6,7 @@ Este guia é para uma VM com domínio e HTTPS. Para hospedar no próprio PC com 
 2. Aponte `DOMAIN` e `live.DOMAIN` (DNS A) para a VM.
 3. Abra no firewall: 80/tcp, 443/tcp, 7881/tcp, 3478/udp, 50000-50200/udp.
 4. `docker compose up -d --build`
-5. Coloque o `.exe` em `infra/site/download/ScreenShare-portable.exe` e atualize `version.json`.
+5. A página em `infra/site` aponta para o `.exe` da última release no GitHub; não há arquivo para copiar.
 
 ## TURN/TLS (opcional)
 

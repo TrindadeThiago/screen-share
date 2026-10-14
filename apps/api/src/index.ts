@@ -19,7 +19,6 @@ const app = await buildApp({
   apiSecret: cfg.apiSecret,
   livekitUrl: cfg.livekitUrl,
   tokenTtlSeconds: cfg.tokenTtlSeconds,
-  versionFile: cfg.versionFile,
   ...(cfg.roomCreationKey ? { roomCreationKey: cfg.roomCreationKey } : {}),
 });
 

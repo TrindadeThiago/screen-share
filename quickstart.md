@@ -52,7 +52,6 @@ cd apps/api
 LIVEKIT_URL=ws://localhost:7880 \
 LIVEKIT_API_KEY=devkey \
 LIVEKIT_API_SECRET=secret \
-VERSION_FILE=../../infra/version.json \
 npm start
 ```
 
@@ -63,7 +62,6 @@ cd apps\api
 $env:LIVEKIT_URL="ws://localhost:7880"
 $env:LIVEKIT_API_KEY="devkey"
 $env:LIVEKIT_API_SECRET="secret"
-$env:VERSION_FILE="..\..\infra\version.json"
 npm start
 ```
 
@@ -142,7 +140,6 @@ cd apps\api
 $env:LIVEKIT_URL="ws://100.x.y.z:7880"
 $env:LIVEKIT_API_KEY="devkey"
 $env:LIVEKIT_API_SECRET="secret"
-$env:VERSION_FILE="..\..\infra\version.json"
 npm start
 ```
 
@@ -314,7 +311,7 @@ O IP público de conexões residenciais muda de tempos em tempos, em geral quand
 
 ## 8. Gerar o `.exe` portable
 
-No Windows, com o Node.js 22 instalado e o projeto numa pasta do Windows (não dentro do WSL):
+A versão pronta está na [última release](https://github.com/TrindadeThiago/screen-share/releases/latest): baixe o `ScreenShare-portable.exe` de lá. Para gerar o seu, no Windows, com o Node.js 22 instalado e o projeto numa pasta do Windows (não dentro do WSL):
 
 ```powershell
 npm ci
