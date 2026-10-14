@@ -59,7 +59,8 @@ function stateStore() {
       }
     },
     saveKey: (key: string | null) => {
-      const { serverKey: _old, ...rest } = read();
+      const rest = read();
+      delete rest.serverKey;
       if (!key) return write(rest);
       if (!safeStorage.isEncryptionAvailable())
         throw new Error('Este sistema não oferece como guardar a chave com segurança.');
