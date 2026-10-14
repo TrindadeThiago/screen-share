@@ -19,6 +19,7 @@ export interface IpcDeps {
   getServerKey(): string | null;
   setServerKey(key: string | null): void;
   getMediaUrl(): string | null;
+  setMediaUrl(url: string | null): Promise<void>;
   diagnostics: { log(message: unknown): void; tail(): string };
   setInRoom(inRoom: boolean): void;
 }
@@ -66,6 +67,10 @@ export function registerIpc(ipcMain: IpcMainLike, d: IpcDeps): void {
     d.setServerKey(k || null);
   });
   ipcMain.handle('server:media', () => d.getMediaUrl());
+  ipcMain.handle('server:setMedia', async (_e, url: unknown) => {
+    if (url !== null && typeof url !== 'string') throw new Error('Endereço inválido');
+    await d.setMediaUrl(url);
+  });
   ipcMain.handle('diag:log', (_e, message: unknown) => d.diagnostics.log(message));
   ipcMain.handle('diag:read', () => d.diagnostics.tail());
   ipcMain.handle('room:active', (_e, inRoom: unknown) => d.setInRoom(inRoom === true));

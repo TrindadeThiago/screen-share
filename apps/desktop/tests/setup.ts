@@ -24,6 +24,7 @@ export function installScreenShareMock(overrides: Record<string, unknown> = {}) 
     getServerKey: vi.fn().mockResolvedValue(null),
     setServerKey: vi.fn().mockResolvedValue(undefined),
     getMediaUrl: vi.fn().mockResolvedValue(null),
+    setMediaUrl: vi.fn().mockResolvedValue(undefined),
     logDiagnostic: vi.fn().mockResolvedValue(undefined),
     readDiagnostics: vi.fn().mockResolvedValue(''),
     setInRoom: vi.fn().mockResolvedValue(undefined),

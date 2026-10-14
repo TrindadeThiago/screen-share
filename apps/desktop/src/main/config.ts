@@ -18,6 +18,23 @@ export function normalizeServerUrl(input: unknown): string | null {
   }
 }
 
+/**
+ * Normaliza o endereço do servidor de mídia: assume ws:// se faltar esquema; aceita ws, wss,
+ * http e https; devolve a origem.
+ */
+export function normalizeMediaUrl(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const raw = input.trim();
+  if (!raw) return null;
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `ws://${raw}`);
+    if (!['ws:', 'wss:', 'http:', 'https:'].includes(u.protocol) || !u.hostname) return null;
+    return u.origin;
+  } catch {
+    return null;
+  }
+}
+
 /** Lê `serverKey` (chave para criar salas) de um config.json; qualquer falha retorna null. */
 export function readServerKey(dir: string, readFile: (path: string) => string): string | null {
   try {
@@ -35,9 +52,7 @@ export function readServerKey(dir: string, readFile: (path: string) => string): 
 export function readMediaUrl(dir: string, readFile: (path: string) => string): string | null {
   try {
     const data = JSON.parse(readFile(join(dir, CONFIG_FILE_NAME))) as { mediaUrl?: unknown };
-    if (typeof data.mediaUrl !== 'string') return null;
-    const u = new URL(data.mediaUrl);
-    return ['ws:', 'wss:', 'http:', 'https:'].includes(u.protocol) ? u.origin : null;
+    return normalizeMediaUrl(data.mediaUrl);
   } catch {
     return null;
   }

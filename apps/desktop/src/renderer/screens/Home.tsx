@@ -14,6 +14,9 @@ interface Props {
   hasServerKey?: boolean;
   /** Salva a chave para criar salas (null apaga). Ausente: o app não pede a chave. */
   onChangeKey?: (key: string | null) => Promise<void>;
+  mediaUrl?: string | null;
+  /** Salva o servidor de mídia (null volta ao da API); o app recarrega. */
+  onChangeMedia?: (url: string | null) => Promise<void>;
 }
 
 const errText = (e: unknown) =>
@@ -26,6 +29,8 @@ export function Home({
   onChangeServer,
   hasServerKey = false,
   onChangeKey,
+  mediaUrl = null,
+  onChangeMedia,
 }: Props) {
   const { prefs, loaded, update } = usePreferences();
   const [name, setName] = useState('');
@@ -260,6 +265,8 @@ export function Home({
           onChangeServer={onChangeServer}
           hasServerKey={hasServerKey}
           {...(onChangeKey ? { onChangeKey } : {})}
+          mediaUrl={mediaUrl}
+          {...(onChangeMedia ? { onChangeMedia } : {})}
         />
       )}
     </main>

@@ -16,6 +16,7 @@ import { createCapture } from './capture';
 import {
   fetchMediaUrl,
   isServerConfigured,
+  normalizeMediaUrl,
   normalizeServerUrl,
   readConfigFile,
   readMediaUrl,
@@ -48,6 +49,12 @@ function stateStore() {
     getSavedServer: () =>
       typeof read().serverUrl === 'string' ? (read().serverUrl as string) : null,
     saveServer: (url: string) => write({ ...read(), serverUrl: url }),
+    getSavedMedia: () => (typeof read().mediaUrl === 'string' ? (read().mediaUrl as string) : null),
+    saveMedia: (url: string | null) => {
+      const rest = read();
+      delete rest.mediaUrl;
+      write(url ? { ...rest, mediaUrl: url } : rest);
+    },
     /** A chave fica cifrada pelo sistema (DPAPI no Windows), nunca em texto puro. */
     getSavedKey: (): string | null => {
       const v = read().serverKey;
@@ -88,7 +95,10 @@ async function createWindow() {
     };
     configured = isServerConfigured(sources);
     serverUrl = resolveServerUrl(sources);
-    mediaOverride = readMediaUrl(exeDir(), (p) => readFileSync(p, 'utf8'));
+    // Salvo no app > config.json; sem nenhum dos dois, vale o que a API informa.
+    mediaOverride =
+      normalizeMediaUrl(store.getSavedMedia()) ??
+      readMediaUrl(exeDir(), (p) => readFileSync(p, 'utf8'));
     const mediaUrl =
       mediaOverride ??
       (await fetchMediaUrl(serverUrl)) ??
@@ -132,6 +142,14 @@ async function createWindow() {
       null,
     setServerKey: (key) => store.saveKey(key),
     getMediaUrl: () => mediaOverride,
+    async setMediaUrl(input) {
+      const url = input === null || !input.trim() ? null : normalizeMediaUrl(input);
+      if (input !== null && input.trim() && !url)
+        throw new Error('Endereço inválido. Use algo como ws://localhost:7880');
+      store.saveMedia(url);
+      await resolveAll();
+      win.webContents.reload();
+    },
     diagnostics,
     setInRoom: (inRoom) => presence.setInRoom(inRoom),
   });

@@ -69,6 +69,8 @@ export function App() {
             onChangeServer={(url) => window.screenShare.setServerUrl(url)}
             hasServerKey={serverKey !== null}
             onChangeKey={changeKey}
+            mediaUrl={mediaUrl}
+            onChangeMedia={(url) => window.screenShare.setMediaUrl(url)}
             onJoined={(join, displayName, password) =>
               setSession({ join, displayName, ...(password ? { password } : {}) })
             }

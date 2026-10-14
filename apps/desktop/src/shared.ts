@@ -42,8 +42,10 @@ export interface ScreenShareBridge {
   getServerKey(): Promise<string | null>;
   /** Salva a chave no app, cifrada pelo sistema; null ou vazio apaga a salva. */
   setServerKey(key: string | null): Promise<void>;
-  /** Endereço do servidor de mídia definido no config.json (`mediaUrl`); null usa o da API. */
+  /** Servidor de mídia no lugar do informado pela API (salvo no app > config.json); null usa o da API. */
   getMediaUrl(): Promise<string | null>;
+  /** Salva o servidor de mídia e recarrega o app; null ou vazio volta ao da API. Rejeita se inválido. */
+  setMediaUrl(url: string | null): Promise<void>;
   /** Acrescenta uma linha ao log de diagnóstico (códigos de sala e tokens são removidos). */
   logDiagnostic(message: string): Promise<void>;
   /** Últimas linhas do log de diagnóstico, para copiar e enviar. */

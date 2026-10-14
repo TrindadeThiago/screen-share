@@ -16,6 +16,7 @@ function setup() {
     getServerKey: () => 'chave',
     setServerKey: vi.fn(),
     getMediaUrl: () => 'ws://localhost:7880',
+    setMediaUrl: vi.fn().mockResolvedValue(undefined),
     diagnostics: { log: vi.fn(), tail: vi.fn().mockReturnValue('linhas') },
     setInRoom: vi.fn(),
   };
@@ -70,6 +71,14 @@ describe('ipc', () => {
     expect(deps.setServerKey).toHaveBeenLastCalledWith(null);
     call('server:setKey', null);
     expect(deps.setServerKey).toHaveBeenLastCalledWith(null);
+  });
+  it('server:setMedia aceita texto ou null e repassa ao main', async () => {
+    const { call, deps } = setup();
+    await expect(call('server:setMedia', 7880)).rejects.toThrow();
+    await call('server:setMedia', 'ws://localhost:7880');
+    expect(deps.setMediaUrl).toHaveBeenLastCalledWith('ws://localhost:7880');
+    await call('server:setMedia', null);
+    expect(deps.setMediaUrl).toHaveBeenLastCalledWith(null);
   });
   it('sanitiza preferências', () => {
     expect(
