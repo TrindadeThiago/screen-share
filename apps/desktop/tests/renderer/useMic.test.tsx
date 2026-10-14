@@ -1,7 +1,7 @@
 import { fireEvent } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { useMic } from '../../src/renderer/livekit/useMic';
+import { keyLabel, useMic } from '../../src/renderer/livekit/useMic';
 
 describe('push-to-talk', () => {
   it('não liga o microfone por padrão', () => {
@@ -18,6 +18,17 @@ describe('push-to-talk', () => {
     act(() => void fireEvent.keyUp(window, { code: 'KeyV' }));
     expect(set).toHaveBeenLastCalledWith(false);
     expect(result.current.talking).toBe(false);
+  });
+  it('usa a tecla configurada e mostra um nome curto', () => {
+    const set = vi.fn();
+    renderHook(() => useMic(set, 'KeyB'));
+    fireEvent.keyDown(window, { code: 'KeyV' });
+    expect(set).not.toHaveBeenCalled();
+    fireEvent.keyDown(window, { code: 'KeyB' });
+    expect(set).toHaveBeenLastCalledWith(true);
+    expect(keyLabel('KeyB')).toBe('B');
+    expect(keyLabel('Digit1')).toBe('1');
+    expect(keyLabel('Space')).toBe('Space');
   });
   it('ignora outras teclas, repetição e desabilitado', () => {
     const set = vi.fn();

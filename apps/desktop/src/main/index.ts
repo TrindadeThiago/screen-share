@@ -1,8 +1,27 @@
-import { app, BrowserWindow, desktopCapturer, ipcMain, session, shell } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  desktopCapturer,
+  globalShortcut,
+  ipcMain,
+  powerSaveBlocker,
+  session,
+  shell,
+} from 'electron';
+import * as fs from 'node:fs';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createCapture } from './capture';
-import { fetchMediaUrl, normalizeServerUrl, readConfigFile, resolveServerUrl } from './config';
+import {
+  fetchMediaUrl,
+  normalizeServerUrl,
+  readConfigFile,
+  readMediaUrl,
+  readServerKey,
+  resolveServerUrl,
+} from './config';
+import { createDiagnostics } from './diagnostics';
+import { createPresence } from './presence';
 import { registerIpc, sanitizePreferences } from './ipc';
 import { buildCsp, createWindowOptions } from './security';
 import { checkForUpdate } from './version';
@@ -38,6 +57,7 @@ async function createWindow() {
   const capture = createCapture(desktopCapturer as never);
   let serverUrl = '';
   let csp = '';
+  let mediaOverride: string | null = null;
 
   const resolveAll = async () => {
     serverUrl = resolveServerUrl({
@@ -45,13 +65,22 @@ async function createWindow() {
       file: readConfigFile(exeDir(), (p) => readFileSync(p, 'utf8')),
       env: process.env.SCREEN_SHARE_API_URL,
     });
+    mediaOverride = readMediaUrl(exeDir(), (p) => readFileSync(p, 'utf8'));
     const mediaUrl =
-      (await fetchMediaUrl(serverUrl)) ?? normalizeServerUrl(process.env.SCREEN_SHARE_MEDIA_URL);
+      mediaOverride ??
+      (await fetchMediaUrl(serverUrl)) ??
+      normalizeServerUrl(process.env.SCREEN_SHARE_MEDIA_URL);
     csp = buildCsp(serverUrl, mediaUrl);
   };
   await resolveAll();
 
   const win = new BrowserWindow(createWindowOptions(join(__dirname, '../preload/index.js')));
+  const diagnostics = createDiagnostics(join(app.getPath('userData'), 'logs'), fs);
+  const presence = createPresence(powerSaveBlocker, globalShortcut, () =>
+    win.webContents.send('mic:toggle'),
+  );
+  diagnostics.log(`app ${app.getVersion()} iniciado`);
+  win.on('closed', () => presence.setInRoom(false));
 
   registerIpc(ipcMain, {
     capture,
@@ -68,6 +97,13 @@ async function createWindow() {
     openExternal: (url) => shell.openExternal(url),
     checkForUpdate: () => checkForUpdate(app.getVersion(), `${serverUrl}/version`),
     prefs: store.prefs,
+    getServerKey: () =>
+      readServerKey(exeDir(), (p) => readFileSync(p, 'utf8')) ??
+      process.env.SCREEN_SHARE_SERVER_KEY ??
+      null,
+    getMediaUrl: () => mediaOverride,
+    diagnostics,
+    setInRoom: (inRoom) => presence.setInRoom(inRoom),
   });
 
   session.defaultSession.setDisplayMediaRequestHandler((req, cb) =>

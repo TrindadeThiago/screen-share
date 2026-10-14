@@ -11,6 +11,16 @@ const bridge: ScreenShareBridge = {
   setServerUrl: (url) => ipcRenderer.invoke('server:set', url),
   getPreferences: () => ipcRenderer.invoke('prefs:get'),
   setPreferences: (p) => ipcRenderer.invoke('prefs:set', p),
+  getServerKey: () => ipcRenderer.invoke('server:key'),
+  getMediaUrl: () => ipcRenderer.invoke('server:media'),
+  logDiagnostic: (message) => ipcRenderer.invoke('diag:log', message),
+  readDiagnostics: () => ipcRenderer.invoke('diag:read'),
+  setInRoom: (inRoom) => ipcRenderer.invoke('room:active', inRoom),
+  onMicToggle: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on('mic:toggle', listener);
+    return () => void ipcRenderer.removeListener('mic:toggle', listener);
+  },
 };
 
 contextBridge.exposeInMainWorld('screenShare', bridge);

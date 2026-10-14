@@ -18,6 +18,31 @@ export function normalizeServerUrl(input: unknown): string | null {
   }
 }
 
+/** Lê `serverKey` (chave para criar salas) de um config.json; qualquer falha retorna null. */
+export function readServerKey(dir: string, readFile: (path: string) => string): string | null {
+  try {
+    const data = JSON.parse(readFile(join(dir, CONFIG_FILE_NAME))) as { serverKey?: unknown };
+    return typeof data.serverKey === 'string' && data.serverKey ? data.serverKey : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lê `mediaUrl` de um config.json: endereço do servidor de mídia a usar no lugar do que a API
+ * informa. Serve a quem hospeda o servidor no próprio PC e não o alcança pelo IP público.
+ */
+export function readMediaUrl(dir: string, readFile: (path: string) => string): string | null {
+  try {
+    const data = JSON.parse(readFile(join(dir, CONFIG_FILE_NAME))) as { mediaUrl?: unknown };
+    if (typeof data.mediaUrl !== 'string') return null;
+    const u = new URL(data.mediaUrl);
+    return ['ws:', 'wss:', 'http:', 'https:'].includes(u.protocol) ? u.origin : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Lê `apiUrl` de um config.json; qualquer falha retorna null. */
 export function readConfigFile(dir: string, readFile: (path: string) => string): string | null {
   try {

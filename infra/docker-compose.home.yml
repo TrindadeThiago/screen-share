@@ -1,0 +1,21 @@
+# Teste em casa: sem domínio e sem Caddy; API e LiveKit direto na rede do host.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.home.yml up -d --build
+# Exige no .env: PUBLIC_IP (IP público ou do Tailscale). Portas: 3300, 7880, 7881/tcp e 7882/udp.
+services:
+  livekit:
+    network_mode: host
+    ports: !reset []
+    environment:
+      NODE_IP: ${PUBLIC_IP}
+    volumes: !override
+      - ./livekit.home.yaml:/etc/livekit.yaml:ro
+  api:
+    build:
+      network: host
+    network_mode: host
+    environment:
+      PORT: 3300
+      LIVEKIT_URL: ws://${PUBLIC_IP}:7880
+      LIVEKIT_API_URL: http://127.0.0.1:7880
+  caddy:
+    profiles: [nao-usar-em-casa]

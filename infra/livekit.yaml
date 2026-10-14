@@ -5,11 +5,15 @@ rtc:
   port_range_start: 50000
   port_range_end: 50100
   use_external_ip: true
+# TURN só em UDP. TURN/TLS exige domínio e certificado próprios (ver infra/README.md);
+# sem eles, redes restritas ainda entram pelo fallback TCP na 7881.
 turn:
   enabled: true
-  domain: turn.screenshare.example.com # troque pelo seu domínio (o LiveKit não expande variáveis)
-  tls_port: 5349 # o Caddy/porta 443 pode ser configurado como fallback (ver infra/README.md)
   udp_port: 3478
-prometheus_port: 6789
+  # Portas por onde o TURN repassa a mídia; precisam estar publicadas no compose e no firewall.
+  relay_range_start: 50101
+  relay_range_end: 50200
+prometheus:
+  port: 6789
 logging:
   level: info

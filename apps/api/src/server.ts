@@ -33,6 +33,18 @@ export async function buildApp(deps: AppDeps) {
     },
   });
   app.setErrorHandler(errorHandler);
+  // O app desktop chama a API a partir de file:// (origem "null"). A API não usa cookies
+  // nem credenciais, então liberar qualquer origem não expõe nada além do que já é público.
+  app.addHook('onRequest', async (req, reply) => {
+    reply.header('access-control-allow-origin', '*');
+    if (req.method !== 'OPTIONS') return;
+    return reply
+      .header('access-control-allow-methods', 'GET, POST, OPTIONS')
+      .header('access-control-allow-headers', 'content-type, x-server-key')
+      .header('access-control-max-age', '600')
+      .status(204)
+      .send();
+  });
   await registerRateLimit(app, deps.globalRateMax ?? 120);
   await app.register(roomRoutes(deps, deps.tokenRateMax ?? 20));
   await app.register(versionRoutes(deps.versionFile));

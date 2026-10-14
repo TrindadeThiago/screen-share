@@ -29,6 +29,9 @@ export function Viewer({
   const [volume, setVolume] = useState(initialVolume);
   const [muted, setMuted] = useState(false);
 
+  // As preferências chegam depois da primeira renderização.
+  useEffect(() => setVolume(initialVolume), [initialVolume]);
+
   useEffect(() => {
     const el = video.current;
     if (!el || !videoTrack) return;

@@ -15,6 +15,10 @@ export interface Preferences {
   volume?: number;
   preset?: 'motion' | 'detail';
   pushToTalkKey?: string;
+  /** Camada extra de baixa resolução para espectadores com conexão lenta (padrão: ligada). */
+  simulcast?: boolean;
+  /** Silencia as vozes dos amigos enquanto transmito a tela com áudio (evita eco). */
+  muteVoicesWhileSharing?: boolean;
 }
 
 /** Contrato exposto ao renderer como window.screenShare (ver contracts/desktop-ipc.md). */
@@ -30,4 +34,19 @@ export interface ScreenShareBridge {
   setServerUrl(url: string): Promise<void>;
   getPreferences(): Promise<Preferences>;
   setPreferences(p: Preferences): Promise<void>;
+  /** Chave para criar salas neste servidor (config.json ou ambiente); null se não houver. */
+  getServerKey(): Promise<string | null>;
+  /** Endereço do servidor de mídia definido no config.json (`mediaUrl`); null usa o da API. */
+  getMediaUrl(): Promise<string | null>;
+  /** Acrescenta uma linha ao log de diagnóstico (códigos de sala e tokens são removidos). */
+  logDiagnostic(message: string): Promise<void>;
+  /** Últimas linhas do log de diagnóstico, para copiar e enviar. */
+  readDiagnostics(): Promise<string>;
+  /** Avisa que entrou/saiu de uma sala: mantém a tela acordada e ativa o atalho do microfone. */
+  setInRoom(inRoom: boolean): Promise<void>;
+  /** Chamado quando o atalho global do microfone é pressionado. Devolve a função para parar. */
+  onMicToggle(callback: () => void): () => void;
 }
+
+/** Atalho global (funciona fora do app) que liga/desliga o microfone aberto. */
+export const MIC_TOGGLE_LABEL = 'Ctrl+Shift+M';

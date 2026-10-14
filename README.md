@@ -7,16 +7,24 @@ App desktop (Windows 10/11, `.exe` portable) para compartilhar a tela com amigos
 1. Baixe o `.exe` na página do servidor (veja `infra/site`). O Windows pode mostrar o aviso "app não reconhecido": _Mais informações → Executar assim mesmo_.
 2. Digite seu nome e **Criar sala**; copie o código e envie. Para entrar, cole o código e clique em **Entrar**.
 3. **Compartilhar tela** → escolha uma tela inteira (com áudio) ou uma janela (sem áudio).
-4. **Eco:** o app envia todo o som do computador. Use fone de ouvido e deixe o microfone desligado ao transmitir. Push-to-talk: segure `V` com o app em foco.
+4. **Eco:** ao transmitir uma tela inteira, o app envia todo o som do computador, inclusive as vozes dos amigos tocadas por ele; fone de ouvido não evita isso. Marque _Silenciar as vozes para mim enquanto transmito_ para eliminar o eco.
+5. **Voz:** segure `V` para falar com o app em foco (a tecla pode ser trocada na sala). `Ctrl+Shift+M` liga e desliga o microfone aberto mesmo com o app em segundo plano.
+6. **Deu problema?** _Copiar diagnóstico_ na sala copia o log (sem códigos de sala) para você colar e enviar.
 
 ## Endereço do servidor
+
 O `.exe` não traz o servidor embutido. O app usa, nesta ordem:
+
 1. o endereço salvo pelo campo **Endereço do servidor** na tela inicial (o app recarrega ao salvar);
-2. um arquivo `config.json` ao lado do `.exe`: `{ "apiUrl": "http://100.x.y.z:3000" }`;
+2. um arquivo `config.json` ao lado do `.exe`: `{ "apiUrl": "http://100.x.y.z:3000", "serverKey": "..." }`;
 3. a variável de ambiente `SCREEN_SHARE_API_URL`;
 4. o padrão `https://screenshare.example.com` (placeholder).
 
+Quem hospeda o servidor no próprio PC e não o alcança pelo IP público pode acrescentar `"mediaUrl": "ws://localhost:7880"` ao `config.json` (com `apiUrl` em `http://localhost:...`).
+
 O app descobre o endereço do LiveKit sozinho, pela rota `GET /config` da API. Para mandar o `.exe` já configurado aos amigos, envie junto o `config.json`.
+
+Se o servidor exigir chave para criar salas (`ROOM_CREATION_KEY`, veja `infra/README.md`), quem cria salas precisa de `serverKey` no `config.json` ou da variável `SCREEN_SHARE_SERVER_KEY`. Quem só entra com o código não precisa.
 
 ## Desenvolver
 
