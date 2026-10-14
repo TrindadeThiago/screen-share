@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { MonitorPlay } from 'lucide-react';
 import type { BroadcastState } from '../livekit/useRoom';
 import { ViewerControls } from './ViewerControls';
 
@@ -55,21 +56,41 @@ export function Viewer({
 
   const live = state === 'live';
   return (
-    <div ref={box} className="viewer">
-      <video ref={video} autoPlay playsInline muted data-testid="video" hidden={!live} />
+    <div
+      ref={box}
+      className="viewer group relative flex size-full items-center justify-center bg-stage"
+    >
+      <video
+        ref={video}
+        autoPlay
+        playsInline
+        muted
+        data-testid="video"
+        hidden={!live}
+        className="size-full object-contain"
+      />
       <audio ref={audio} autoPlay data-testid="audio" />
-      {!live && <p role="status">{MESSAGES[state]}</p>}
+      {!live && (
+        <div className="flex flex-col items-center gap-3 px-6 text-center text-soft">
+          <MonitorPlay size={44} className="text-faint" />
+          <p role="status" className="text-sm">
+            {MESSAGES[state]}
+          </p>
+        </div>
+      )}
       {live && (
-        <ViewerControls
-          volume={volume}
-          muted={muted}
-          onVolume={(v) => {
-            setVolume(v);
-            onVolumeChange?.(v);
-          }}
-          onToggleMute={() => setMuted((m) => !m)}
-          onFullscreen={() => void box.current?.requestFullscreen?.()}
-        />
+        <div className="absolute inset-x-0 bottom-3 flex justify-center opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+          <ViewerControls
+            volume={volume}
+            muted={muted}
+            onVolume={(v) => {
+              setVolume(v);
+              onVolumeChange?.(v);
+            }}
+            onToggleMute={() => setMuted((m) => !m)}
+            onFullscreen={() => void box.current?.requestFullscreen?.()}
+          />
+        </div>
       )}
     </div>
   );

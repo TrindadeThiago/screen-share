@@ -22,7 +22,7 @@ export function SelfPreview({ track }: { track: AttachableTrack }) {
       autoPlay
       playsInline
       muted
-      width={320}
+      className="size-full object-contain"
       data-testid="self-preview"
       aria-label="Prévia da sua transmissão"
     />

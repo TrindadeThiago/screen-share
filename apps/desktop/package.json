@@ -12,10 +12,12 @@
   },
   "dependencies": {
     "livekit-client": "^2.5.0",
+    "lucide-react": "^1.56.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.0",
@@ -27,6 +29,7 @@
     "electron": "33.2.1",
     "electron-builder": "^25.1.0",
     "jsdom": "^25.0.0",
+    "tailwindcss": "^4.3.3",
     "vite": "^6.0.0",
     "vitest": "^3.0.0",
     "yaml": "^2.5.0"

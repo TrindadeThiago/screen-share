@@ -15,6 +15,8 @@ export interface Preferences {
   volume?: number;
   preset?: 'motion' | 'detail';
   pushToTalkKey?: string;
+  /** Segurar a tecla para falar está habilitado. */
+  pushToTalk?: boolean;
   /** Camada extra de baixa resolução para espectadores com conexão lenta (padrão: ligada). */
   simulcast?: boolean;
   /** Silencia as vozes dos amigos enquanto transmito a tela com áudio (evita eco). */

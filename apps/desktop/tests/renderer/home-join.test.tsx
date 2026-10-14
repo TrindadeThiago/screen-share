@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { installScreenShareMock } from '../setup';
 import { ApiError } from '../../src/renderer/api/client';
 import { Home } from '../../src/renderer/screens/Home';
 
@@ -10,6 +11,8 @@ async function fill(code: string) {
   await userEvent.type(screen.getByLabelText('Seu nome'), 'Bia');
   await userEvent.type(screen.getByLabelText('Código da sala'), code);
 }
+
+beforeEach(() => void installScreenShareMock());
 
 describe('entrar em sala', () => {
   it('aceita código colado com espaços/minúsculas e repassa ao cliente', async () => {
@@ -67,5 +70,26 @@ describe('entrar em sala', () => {
     await fill('abcd');
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Algo deu errado');
+  });
+  it('preenche o nome usado da última vez e grava o novo ao entrar', async () => {
+    const sm = installScreenShareMock({
+      getPreferences: vi.fn().mockResolvedValue({ displayName: 'Bia' }),
+    });
+    const a = { joinRoom: vi.fn().mockResolvedValue(join) };
+    render(
+      <Home
+        api={a as never}
+        serverUrl="https://api.example.com"
+        onChangeServer={vi.fn()}
+        onJoined={vi.fn()}
+      />,
+    );
+    const name = screen.getByLabelText('Seu nome');
+    await waitFor(() => expect(name).toHaveValue('Bia'));
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Bianca');
+    await userEvent.type(screen.getByLabelText('Código da sala'), 'abcd');
+    await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    await waitFor(() => expect(sm.setPreferences).toHaveBeenCalledWith({ displayName: 'Bianca' }));
   });
 });

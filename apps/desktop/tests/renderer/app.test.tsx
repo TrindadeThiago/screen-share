@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { installScreenShareMock } from '../setup';
 import { App } from '../../src/renderer/App';
@@ -10,9 +11,8 @@ describe('App', () => {
     });
     render(<App />);
     expect(screen.getByRole('status')).toHaveTextContent('Carregando');
-    expect(await screen.findByLabelText('Endereço do servidor')).toHaveValue(
-      'http://100.1.2.3:3000',
-    );
+    await userEvent.click(await screen.findByRole('button', { name: 'Configurações' }));
+    expect(screen.getByLabelText('Endereço do servidor')).toHaveValue('http://100.1.2.3:3000');
     expect(sm.getServerUrl).toHaveBeenCalled();
   });
 });
