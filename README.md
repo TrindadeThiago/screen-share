@@ -62,3 +62,7 @@ Variáveis opcionais do app: `SCREEN_SHARE_API_URL` e `SCREEN_SHARE_MEDIA_URL` (
 ## Servidor
 
 Veja `infra/README.md`. Especificação e plano em `specs/001-screen-share-app/`.
+
+## Licença
+
+[MIT](LICENSE). Você pode usar, modificar e redistribuir o código, mantendo o aviso de direitos autorais. O software é fornecido sem garantia.
