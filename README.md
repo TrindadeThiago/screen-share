@@ -32,18 +32,20 @@ As imagens vêm da página de pré-visualização do projeto, com dados simulado
 
 ## Endereço do servidor
 
-O `.exe` não traz o servidor embutido. O app usa, nesta ordem:
+O `.exe` não traz o servidor embutido. Na primeira vez que abre sem servidor definido, o app mostra a tela **Configurar servidor**, que pede o endereço da API e, opcionalmente, a chave para criar salas. O endereço só é aceito se a API responder em `GET /config`. Depois, os dois ficam em **Configurações**.
 
-1. o endereço salvo pelo campo **Endereço do servidor** na tela inicial (o app recarrega ao salvar);
+O app usa, nesta ordem:
+
+1. o endereço salvo no app (tela inicial ou **Configurações**; o app recarrega ao salvar);
 2. um arquivo `config.json` ao lado do `.exe`: `{ "apiUrl": "http://100.x.y.z:3000", "serverKey": "..." }`;
 3. a variável de ambiente `SCREEN_SHARE_API_URL`;
 4. o padrão `https://screenshare.example.com` (placeholder).
 
 Quem hospeda o servidor no próprio PC e não o alcança pelo IP público pode acrescentar `"mediaUrl": "ws://localhost:7880"` ao `config.json` (com `apiUrl` em `http://localhost:...`).
 
-O app descobre o endereço do LiveKit sozinho, pela rota `GET /config` da API. Para mandar o `.exe` já configurado aos amigos, envie junto o `config.json`.
+O app descobre o endereço do LiveKit sozinho, pela rota `GET /config` da API. O `config.json` é opcional: serve para mandar o `.exe` já configurado aos amigos, sem passar pela tela inicial.
 
-Se o servidor exigir chave para criar salas (`ROOM_CREATION_KEY`, veja `infra/README.md`), quem cria salas precisa de `serverKey` no `config.json` ou da variável `SCREEN_SHARE_SERVER_KEY`. Quem só entra com o código não precisa.
+Se o servidor exigir chave para criar salas (`ROOM_CREATION_KEY`, veja `infra/README.md`), quem cria salas precisa dela. A ordem é a mesma: chave salva no app > `serverKey` no `config.json` > variável `SCREEN_SHARE_SERVER_KEY`. Se faltar a chave, o app a pede ao criar a sala e a guarda cifrada pelo sistema (DPAPI no Windows). Quem só entra com o código não precisa.
 
 ## Desenvolver
 

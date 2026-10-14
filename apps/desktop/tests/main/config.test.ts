@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_SERVER_URL,
   fetchMediaUrl,
+  isServerConfigured,
   normalizeServerUrl,
   readConfigFile,
   readMediaUrl,
@@ -59,6 +60,17 @@ describe('resolveServerUrl', () => {
   });
   it('ignora valores inválidos e cai para o próximo', () => {
     expect(resolveServerUrl({ saved: 'ftp://x', file: 'b.com' })).toBe('https://b.com');
+  });
+});
+
+describe('isServerConfigured', () => {
+  it('basta uma fonte válida', () => {
+    expect(isServerConfigured({ env: 'c.com' })).toBe(true);
+    expect(isServerConfigured({ saved: null, file: 'http://100.1.2.3:3000' })).toBe(true);
+  });
+  it('sem fontes ou só valores inválidos → não configurado', () => {
+    expect(isServerConfigured({})).toBe(false);
+    expect(isServerConfigured({ saved: 'ftp://x', file: '', env: null })).toBe(false);
   });
 });
 

@@ -59,6 +59,11 @@ export interface ServerSources {
   env?: string | null; // SCREEN_SHARE_API_URL
 }
 
+/** Algum endereço válido foi definido (no app, no config.json ou no ambiente)? */
+export function isServerConfigured(s: ServerSources): boolean {
+  return [s.saved, s.file, s.env].some((v) => normalizeServerUrl(v) !== null);
+}
+
 /** Prioridade: escolha salva no app > config.json > variável de ambiente > padrão. */
 export function resolveServerUrl(s: ServerSources): string {
   return (

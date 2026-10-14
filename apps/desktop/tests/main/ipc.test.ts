@@ -12,7 +12,9 @@ function setup() {
     openExternal: vi.fn().mockResolvedValue(undefined),
     checkForUpdate: vi.fn().mockResolvedValue(null),
     prefs: { get: vi.fn().mockReturnValue({}), set: vi.fn() },
+    isServerConfigured: () => true,
     getServerKey: () => 'chave',
+    setServerKey: vi.fn(),
     getMediaUrl: () => 'ws://localhost:7880',
     diagnostics: { log: vi.fn(), tail: vi.fn().mockReturnValue('linhas') },
     setInRoom: vi.fn(),
@@ -56,6 +58,18 @@ describe('ipc', () => {
     expect(deps.setInRoom).toHaveBeenLastCalledWith(false);
     await call('room:active', true);
     expect(deps.setInRoom).toHaveBeenLastCalledWith(true);
+  });
+  it('server:setKey valida, apara e trata vazio como apagar', async () => {
+    const { call, deps } = setup();
+    expect(await call('server:configured')).toBe(true);
+    expect(() => call('server:setKey', 42)).toThrow();
+    expect(() => call('server:setKey', 'x'.repeat(257))).toThrow();
+    call('server:setKey', '  segredo  ');
+    expect(deps.setServerKey).toHaveBeenLastCalledWith('segredo');
+    call('server:setKey', '   ');
+    expect(deps.setServerKey).toHaveBeenLastCalledWith(null);
+    call('server:setKey', null);
+    expect(deps.setServerKey).toHaveBeenLastCalledWith(null);
   });
   it('sanitiza preferências', () => {
     expect(

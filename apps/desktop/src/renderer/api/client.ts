@@ -35,7 +35,8 @@ export interface CreateRoomInput {
 }
 
 export interface ApiClient {
-  createRoom(input: CreateRoomInput): Promise<JoinResult>;
+  /** `serverKey` substitui a chave do cliente (ao tentar de novo com a chave recém-digitada). */
+  createRoom(input: CreateRoomInput, serverKey?: string | null): Promise<JoinResult>;
   joinRoom(
     code: string,
     input: { displayName: string; password?: string; rejoinToken?: string },
@@ -83,11 +84,11 @@ export function createApiClient(
   }
 
   return {
-    createRoom: (input) =>
+    createRoom: (input, key = serverKey) =>
       request('/rooms', {
         method: 'POST',
         body: JSON.stringify(input),
-        ...(serverKey ? { headers: { 'x-server-key': serverKey } } : {}),
+        ...(key ? { headers: { 'x-server-key': key } } : {}),
       }),
     requestBroadcast: (code, token) =>
       request(`/rooms/${encodeURIComponent(code.trim())}/broadcast`, {

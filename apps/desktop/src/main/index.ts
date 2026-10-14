@@ -5,6 +5,7 @@ import {
   globalShortcut,
   ipcMain,
   powerSaveBlocker,
+  safeStorage,
   session,
   shell,
 } from 'electron';
@@ -14,6 +15,7 @@ import { dirname, join } from 'node:path';
 import { createCapture } from './capture';
 import {
   fetchMediaUrl,
+  isServerConfigured,
   normalizeServerUrl,
   readConfigFile,
   readMediaUrl,
@@ -27,7 +29,7 @@ import { buildCsp, createWindowOptions } from './security';
 import { checkForUpdate } from './version';
 import type { Preferences } from '../shared';
 
-/** Arquivo de estado do app: preferências e endereço do servidor escolhido na tela. */
+/** Arquivo de estado do app: preferências, endereço do servidor e chave escolhidos na tela. */
 function stateStore() {
   const file = join(app.getPath('userData'), 'preferences.json');
   const read = (): Record<string, unknown> => {
@@ -46,6 +48,23 @@ function stateStore() {
     getSavedServer: () =>
       typeof read().serverUrl === 'string' ? (read().serverUrl as string) : null,
     saveServer: (url: string) => write({ ...read(), serverUrl: url }),
+    /** A chave fica cifrada pelo sistema (DPAPI no Windows), nunca em texto puro. */
+    getSavedKey: (): string | null => {
+      const v = read().serverKey;
+      if (typeof v !== 'string') return null;
+      try {
+        return safeStorage.decryptString(Buffer.from(v, 'base64')) || null;
+      } catch {
+        return null;
+      }
+    },
+    saveKey: (key: string | null) => {
+      const { serverKey: _old, ...rest } = read();
+      if (!key) return write(rest);
+      if (!safeStorage.isEncryptionAvailable())
+        throw new Error('Este sistema não oferece como guardar a chave com segurança.');
+      write({ ...rest, serverKey: safeStorage.encryptString(key).toString('base64') });
+    },
   };
 }
 
@@ -58,13 +77,16 @@ async function createWindow() {
   let serverUrl = '';
   let csp = '';
   let mediaOverride: string | null = null;
+  let configured = false;
 
   const resolveAll = async () => {
-    serverUrl = resolveServerUrl({
+    const sources = {
       saved: store.getSavedServer(),
       file: readConfigFile(exeDir(), (p) => readFileSync(p, 'utf8')),
       env: process.env.SCREEN_SHARE_API_URL,
-    });
+    };
+    configured = isServerConfigured(sources);
+    serverUrl = resolveServerUrl(sources);
     mediaOverride = readMediaUrl(exeDir(), (p) => readFileSync(p, 'utf8'));
     const mediaUrl =
       mediaOverride ??
@@ -90,6 +112,10 @@ async function createWindow() {
     async setServerUrl(input) {
       const url = normalizeServerUrl(input);
       if (!url) throw new Error('Endereço inválido. Use algo como https://meu-servidor.com');
+      if (!(await fetchMediaUrl(url)))
+        throw new Error(
+          `Não foi possível falar com o servidor em ${url}. Confira o endereço e se ele está no ar.`,
+        );
       store.saveServer(url);
       await resolveAll();
       win.webContents.reload();
@@ -97,10 +123,13 @@ async function createWindow() {
     openExternal: (url) => shell.openExternal(url),
     checkForUpdate: () => checkForUpdate(app.getVersion(), `${serverUrl}/version`),
     prefs: store.prefs,
+    isServerConfigured: () => configured,
     getServerKey: () =>
+      store.getSavedKey() ??
       readServerKey(exeDir(), (p) => readFileSync(p, 'utf8')) ??
       process.env.SCREEN_SHARE_SERVER_KEY ??
       null,
+    setServerKey: (key) => store.saveKey(key),
     getMediaUrl: () => mediaOverride,
     diagnostics,
     setInRoom: (inRoom) => presence.setInRoom(inRoom),

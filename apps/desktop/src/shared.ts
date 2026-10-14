@@ -32,12 +32,16 @@ export interface ScreenShareBridge {
   openExternal(url: string): Promise<void>;
   /** Endereço da API em uso (resolvido: salvo > config.json > ambiente > padrão). */
   getServerUrl(): Promise<string>;
-  /** Valida e salva o endereço e recarrega o app. Rejeita se for inválido. */
+  /** Valida e salva o endereço e recarrega o app. Rejeita se for inválido ou não responder. */
   setServerUrl(url: string): Promise<void>;
+  /** Algum endereço foi definido (no app, config.json ou ambiente)? Se não, mostra a tela inicial. */
+  isServerConfigured(): Promise<boolean>;
   getPreferences(): Promise<Preferences>;
   setPreferences(p: Preferences): Promise<void>;
-  /** Chave para criar salas neste servidor (config.json ou ambiente); null se não houver. */
+  /** Chave para criar salas neste servidor (salva no app > config.json > ambiente); null se não houver. */
   getServerKey(): Promise<string | null>;
+  /** Salva a chave no app, cifrada pelo sistema; null ou vazio apaga a salva. */
+  setServerKey(key: string | null): Promise<void>;
   /** Endereço do servidor de mídia definido no config.json (`mediaUrl`); null usa o da API. */
   getMediaUrl(): Promise<string | null>;
   /** Acrescenta uma linha ao log de diagnóstico (códigos de sala e tokens são removidos). */
