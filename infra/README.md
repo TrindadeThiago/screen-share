@@ -1,5 +1,7 @@
 # Infra
 
+Este guia é para uma VM com domínio e HTTPS. Para hospedar no próprio PC com IP público, sem domínio, use `docker-compose.home.yml` e siga a seção 7 do `quickstart.md` na raiz.
+
 1. Copie `.env.example` para `.env` e preencha `DOMAIN`, chaves do LiveKit.
 2. Aponte `DOMAIN` e `live.DOMAIN` (DNS A) para a VM.
 3. Abra no firewall: 80/tcp, 443/tcp, 7881/tcp, 3478/udp, 50000-50200/udp.
