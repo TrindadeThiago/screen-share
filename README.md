@@ -1,5 +1,11 @@
 # Screen Share
 
+[![Última versão](https://img.shields.io/github/v/release/TrindadeThiago/screen-share?label=vers%C3%A3o)](https://github.com/TrindadeThiago/screen-share/releases/latest)
+[![CI](https://github.com/TrindadeThiago/screen-share/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/TrindadeThiago/screen-share/actions/workflows/release.yml)
+[![Licença MIT](https://img.shields.io/github/license/TrindadeThiago/screen-share?label=licen%C3%A7a)](LICENSE)
+
+**[Baixar o .exe da versão mais recente](https://github.com/TrindadeThiago/screen-share/releases/latest/download/ScreenShare-portable.exe)** (Windows 10/11, sem instalação).
+
 App desktop (Windows 10/11, `.exe` portable) para compartilhar a tela com amigos, com o áudio do computador. Sem login: crie uma sala, envie o código, os amigos entram.
 
 ![Assistindo a uma transmissão, com as métricas abertas](docs/screenshots/room-watching.png)
@@ -68,6 +74,15 @@ A versão do app é a de `apps/desktop/package.json`. Quando um PR que muda essa
 Para lançar uma versão, aumente-a no PR (`npm version <patch|minor|major> -w @screen-share/desktop --no-git-tag-version`): patch para correções, minor para funcionalidades novas, major para mudanças incompatíveis.
 
 Ao abrir, o app consulta a última release no GitHub e mostra um aviso com o link quando há versão nova.
+
+## Contribuir
+
+Contribuições são bem-vindas: correções, melhorias na interface, documentação ou relatos de problemas.
+
+- **Encontrou um problema?** Abra uma [issue](https://github.com/TrindadeThiago/screen-share/issues) com o que aconteceu, o que esperava e o diagnóstico copiado em **Configurações**.
+- **Quer mudar o código?** Faça um fork, crie um branch e abra um pull request para a `main`. A `main` é protegida: toda mudança entra por PR, com lint e testes passando no CI.
+
+Passo a passo, convenções e como lançar uma versão em [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Servidor
 
