@@ -1,21 +1,32 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { ChevronDown, LogIn, MonitorUp, Plus, Settings } from 'lucide-react';
+import { ChevronDown, KeyRound, LogIn, MonitorUp, Plus, Settings } from 'lucide-react';
 import { ApiError, type ApiClient, type JoinResult } from '../api/client';
 import { SettingsDialog } from '../components/SettingsDialog';
 import { Button, Field, IconButton, Notice } from '../components/ui';
 import { usePreferences } from '../hooks/usePreferences';
+import { ipcErrorText } from '../ipcError';
 
 interface Props {
   onJoined: (join: JoinResult, displayName: string, password?: string) => void;
   api: ApiClient;
   serverUrl: string;
   onChangeServer: (url: string) => Promise<void>;
+  hasServerKey?: boolean;
+  /** Salva a chave para criar salas (null apaga). Ausente: o app não pede a chave. */
+  onChangeKey?: (key: string | null) => Promise<void>;
 }
 
 const errText = (e: unknown) =>
   e instanceof ApiError ? e.message : 'Algo deu errado. Tente novamente.';
 
-export function Home({ onJoined, api, serverUrl, onChangeServer }: Props) {
+export function Home({
+  onJoined,
+  api,
+  serverUrl,
+  onChangeServer,
+  hasServerKey = false,
+  onChangeKey,
+}: Props) {
   const { prefs, loaded, update } = usePreferences();
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
@@ -27,6 +38,8 @@ export function Home({ onJoined, api, serverUrl, onChangeServer }: Props) {
   const [roomPassword, setRoomPassword] = useState('');
   const [maxParticipants, setMax] = useState(10);
   const [expiresInMinutes, setExpiry] = useState(720);
+  const [needKey, setNeedKey] = useState(false);
+  const [keyInput, setKeyInput] = useState('');
 
   // O nome usado da última vez já vem preenchido.
   useEffect(() => {
@@ -42,22 +55,42 @@ export function Home({ onJoined, api, serverUrl, onChangeServer }: Props) {
       await fn(displayName);
       update({ displayName });
     } catch (e) {
+      if (e instanceof ApiError && e.code === 'server_key_required' && onChangeKey)
+        setNeedKey(true);
       setError(errText(e));
     } finally {
       setBusy(false);
     }
   };
 
-  const create = () =>
+  const create = (key?: string) =>
     run(async (displayName) => {
-      const res = await api.createRoom({
-        displayName,
-        ...(roomPassword ? { password: roomPassword } : {}),
-        maxParticipants,
-        expiresInMinutes,
-      });
+      const res = await api.createRoom(
+        {
+          displayName,
+          ...(roomPassword ? { password: roomPassword } : {}),
+          maxParticipants,
+          expiresInMinutes,
+        },
+        ...(key ? [key] : []),
+      );
       onJoined(res, displayName, roomPassword || undefined);
     });
+
+  // O servidor pediu a chave: salva a digitada e tenta criar a sala de novo com ela.
+  const saveKeyAndCreate = async (e: FormEvent) => {
+    e.preventDefault();
+    const key = keyInput.trim();
+    if (!key || !onChangeKey) return;
+    try {
+      await onChangeKey(key);
+    } catch (err) {
+      return setError(ipcErrorText(err, 'Não foi possível salvar a chave.'));
+    }
+    setNeedKey(false);
+    setKeyInput('');
+    await create(key);
+  };
 
   const join = (e: FormEvent) => {
     e.preventDefault();
@@ -150,15 +183,39 @@ export function Home({ onJoined, api, serverUrl, onChangeServer }: Props) {
                 </div>
               </div>
             )}
-            <Button
-              variant="primary"
-              className="mt-auto"
-              icon={<Plus size={16} />}
-              disabled={busy}
-              onClick={create}
-            >
-              Criar sala
-            </Button>
+            {needKey ? (
+              <form
+                onSubmit={saveKeyAndCreate}
+                aria-label="Chave do servidor"
+                className="mt-auto flex flex-col gap-3"
+              >
+                <Field
+                  label="Chave para criar salas"
+                  type="password"
+                  value={keyInput}
+                  autoFocus
+                  onChange={(e) => setKeyInput(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  variant="primary"
+                  icon={<KeyRound size={16} />}
+                  disabled={busy || !keyInput.trim()}
+                >
+                  Salvar chave e criar sala
+                </Button>
+              </form>
+            ) : (
+              <Button
+                variant="primary"
+                className="mt-auto"
+                icon={<Plus size={16} />}
+                disabled={busy}
+                onClick={() => void create()}
+              >
+                Criar sala
+              </Button>
+            )}
           </section>
 
           <form
@@ -201,6 +258,8 @@ export function Home({ onJoined, api, serverUrl, onChangeServer }: Props) {
           update={update}
           serverUrl={serverUrl}
           onChangeServer={onChangeServer}
+          hasServerKey={hasServerKey}
+          {...(onChangeKey ? { onChangeKey } : {})}
         />
       )}
     </main>

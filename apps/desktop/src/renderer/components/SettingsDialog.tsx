@@ -3,6 +3,7 @@ import { ClipboardCopy, Keyboard } from 'lucide-react';
 import { MIC_TOGGLE_LABEL, type Preferences } from '../../shared';
 import { PRESET_LABELS, type PresetName } from '../livekit/presets';
 import { DEFAULT_PTT_KEY, keyLabel } from '../livekit/useMic';
+import { ipcErrorText } from '../ipcError';
 import { Button, Dialog, Field, Notice, Section, SelectField, Switch } from './ui';
 
 interface Props {
@@ -12,6 +13,9 @@ interface Props {
   serverUrl: string;
   /** Ausente dentro de uma sala: trocar de servidor recarrega o app. */
   onChangeServer?: (url: string) => Promise<void>;
+  hasServerKey?: boolean;
+  /** Ausente dentro de uma sala, como o servidor. */
+  onChangeKey?: (key: string | null) => Promise<void>;
 }
 
 const PRESET_HINT: Record<PresetName, string> = {
@@ -19,9 +23,19 @@ const PRESET_HINT: Record<PresetName, string> = {
   detail: 'Prioriza nitidez. Bom para texto e código.',
 };
 
-export function SettingsDialog({ onClose, prefs, update, serverUrl, onChangeServer }: Props) {
+export function SettingsDialog({
+  onClose,
+  prefs,
+  update,
+  serverUrl,
+  onChangeServer,
+  hasServerKey = false,
+  onChangeKey,
+}: Props) {
   const [serverInput, setServerInput] = useState(serverUrl);
   const [serverMsg, setServerMsg] = useState<string | null>(null);
+  const [keyInput, setKeyInput] = useState('');
+  const [keyMsg, setKeyMsg] = useState<string | null>(null);
   const [choosingKey, setChoosingKey] = useState(false);
   const [diagCopied, setDiagCopied] = useState(false);
   const preset = prefs.preset ?? 'motion';
@@ -33,11 +47,18 @@ export function SettingsDialog({ onClose, prefs, update, serverUrl, onChangeServ
     try {
       await onChangeServer?.(serverInput);
     } catch (err) {
-      setServerMsg(
-        err instanceof Error
-          ? err.message.replace(/^Error invoking remote method '[^']*': (Error: )?/, '')
-          : 'Endereço inválido.',
-      );
+      setServerMsg(ipcErrorText(err, 'Endereço inválido.'));
+    }
+  };
+
+  const saveKey = async (key: string | null) => {
+    setKeyMsg(null);
+    try {
+      await onChangeKey?.(key);
+      setKeyInput('');
+      setKeyMsg(key ? 'Chave salva.' : 'Chave removida.');
+    } catch (err) {
+      setKeyMsg(ipcErrorText(err, 'Não foi possível salvar a chave.'));
     }
   };
 
@@ -137,6 +158,34 @@ export function SettingsDialog({ onClose, prefs, update, serverUrl, onChangeServ
               <p className="text-xs text-faint">Saia da sala para trocar de servidor.</p>
             )}
             {serverMsg && <Notice>{serverMsg}</Notice>}
+          </form>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveKey(keyInput.trim());
+            }}
+            aria-label="Chave do servidor"
+            className="flex flex-col gap-3"
+          >
+            <div className="flex items-end gap-2">
+              <Field
+                label="Chave para criar salas"
+                type="password"
+                className="flex-1"
+                value={keyInput}
+                placeholder={hasServerKey ? 'Configurada' : 'Nenhuma'}
+                disabled={!onChangeKey}
+                onChange={(e) => setKeyInput(e.target.value)}
+              />
+              <Button type="submit" disabled={!onChangeKey || !keyInput.trim()}>
+                Salvar chave
+              </Button>
+              {hasServerKey && onChangeKey && (
+                <Button onClick={() => void saveKey(null)}>Remover</Button>
+              )}
+            </div>
+            <p className="text-xs text-faint">Só é necessária para criar salas.</p>
+            {keyMsg && <p className="text-xs text-soft">{keyMsg}</p>}
           </form>
         </Section>
 

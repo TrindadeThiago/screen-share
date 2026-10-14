@@ -78,7 +78,7 @@ $env:SCREEN_SHARE_API_URL="http://localhost:3000"
 npx electron .
 ```
 
-Se o app abrir mostrando o endereço `https://screenshare.example.com`, digite `http://localhost:3000` no campo **Endereço do servidor** e clique em **Salvar servidor**. O app recarrega.
+Se o app abrir na tela **Configurar servidor**, digite `http://localhost:3000` em **Endereço do servidor** e clique em **Continuar**. O app recarrega.
 
 ## 5. Testar sozinho com duas janelas
 
@@ -163,13 +163,13 @@ O primeiro comando deve devolver `mediaUrl` com o IP do servidor. O segundo deve
 
 ### 6.6 Entregar o app aos amigos
 
-Gere o `.exe` (passo 8) e envie, junto com um arquivo `config.json` na **mesma pasta**:
+Gere o `.exe` (passo 8) e envie. Na primeira vez que o amigo abrir, o app mostra a tela **Configurar servidor**: ele digita `http://100.x.y.z:3000` e clica em **Continuar**. A chave para criar salas pode ficar em branco.
+
+Para pular essa tela, envie junto um arquivo `config.json` na **mesma pasta** do `.exe`:
 
 ```json
 { "apiUrl": "http://100.x.y.z:3000" }
 ```
-
-Sem o `config.json`, o amigo digita `http://100.x.y.z:3000` no campo **Endereço do servidor**, na tela inicial, e clica em **Salvar servidor**.
 
 ### 6.7 Usar
 
@@ -279,9 +279,7 @@ Do seu próprio PC esse endereço pode não responder: muitos roteadores domést
 
 ### 7.7 Os dois `config.json`
 
-Gere o `.exe` (passo 8). Cada pessoa precisa do `.exe` e de um `config.json` **na mesma pasta**.
-
-O de quem hospeda usa `localhost`, com a chave de criar salas:
+Gere o `.exe` (passo 8). Quem hospeda precisa de um `config.json` **na mesma pasta** do `.exe`, porque o `mediaUrl` com `localhost` só pode ser definido por ele. Ele usa `localhost`, com a chave de criar salas:
 
 ```json
 {
@@ -291,7 +289,7 @@ O de quem hospeda usa `localhost`, com a chave de criar salas:
 }
 ```
 
-O dos amigos usa o IP público:
+Os amigos podem digitar `http://<seu IP público>:3300` na tela inicial do app ou receber um `config.json` com:
 
 ```json
 { "apiUrl": "http://<seu IP público>:3300" }
@@ -311,7 +309,7 @@ O IP público de conexões residenciais muda de tempos em tempos, em geral quand
 | O celular em 4G não abre `/config` | As regras do roteador apontam para o IP local certo? O servidor está no ar? Com WSL: modo espelhado ativo e os dois firewalls liberados (7.4 e 7.5)? |
 | Funciona no celular, mas não no seu PC | Use o `config.json` de quem hospeda (7.7), com `localhost` |
 | O amigo entra, mas o vídeo trava ou atrasa | A regra da 7882 está como UDP? Sem ela a mídia cai na 7881 (TCP), que funciona pior |
-| "Este servidor exige uma chave para criar salas" | Falta `serverKey` no `config.json` de quem cria a sala |
+| "Este servidor exige uma chave para criar salas" | Falta a chave ou ela está errada: digite-a no campo que aparece em **Nova sala** (ou em **Configurações**), ou use `serverKey` no `config.json` |
 | Parou de funcionar de um dia para o outro | O IP público mudou (7.8) |
 
 ## 8. Gerar o `.exe` portable

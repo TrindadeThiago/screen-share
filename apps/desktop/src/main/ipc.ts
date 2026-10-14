@@ -15,7 +15,9 @@ export interface IpcDeps {
   openExternal(url: string): Promise<void>;
   checkForUpdate(): Promise<UpdateInfo | null>;
   prefs: { get(): Preferences; set(p: Preferences): void };
+  isServerConfigured(): boolean;
   getServerKey(): string | null;
+  setServerKey(key: string | null): void;
   getMediaUrl(): string | null;
   diagnostics: { log(message: unknown): void; tail(): string };
   setInRoom(inRoom: boolean): void;
@@ -55,7 +57,14 @@ export function registerIpc(ipcMain: IpcMainLike, d: IpcDeps): void {
   });
   ipcMain.handle('prefs:get', () => d.prefs.get());
   ipcMain.handle('prefs:set', (_e, p: unknown) => d.prefs.set(sanitizePreferences(p)));
+  ipcMain.handle('server:configured', () => d.isServerConfigured());
   ipcMain.handle('server:key', () => d.getServerKey());
+  ipcMain.handle('server:setKey', (_e, key: unknown) => {
+    if (key !== null && typeof key !== 'string') throw new Error('Chave inválida');
+    const k = key?.trim() ?? '';
+    if (k.length > 256) throw new Error('Chave longa demais');
+    d.setServerKey(k || null);
+  });
   ipcMain.handle('server:media', () => d.getMediaUrl());
   ipcMain.handle('diag:log', (_e, message: unknown) => d.diagnostics.log(message));
   ipcMain.handle('diag:read', () => d.diagnostics.tail());
