@@ -38,7 +38,7 @@ As imagens vêm da página de pré-visualização do projeto, com dados simulado
 
 ## Endereço do servidor
 
-O `.exe` pode vir com um servidor padrão, definido no build pela variável `SCREEN_SHARE_DEFAULT_API_URL` (no CI, a variável de mesmo nome do repositório; localmente, o ambiente ou `apps/desktop/.env`, veja `apps/desktop/.env.example`). Com ele, quem só entra em salas não precisa configurar nada. Se nenhum endereço foi definido e o servidor padrão não existe ou não responde, o app mostra a tela **Configurar servidor**, que pede o endereço da API e, opcionalmente, a chave para criar salas. O endereço só é aceito se a API responder em `GET /config`. Depois, os dois ficam em **Configurações**.
+O `.exe` pode vir com um servidor padrão, definido no build pela variável `SCREEN_SHARE_DEFAULT_API_URL` (no CI, o secret de mesmo nome do repositório; localmente, o ambiente ou `apps/desktop/.env`, veja `apps/desktop/.env.example`). Com ele, quem só entra em salas não precisa configurar nada. Se nenhum endereço foi definido e o servidor padrão não existe ou não responde, o app mostra a tela **Configurar servidor**, que pede o endereço da API e, opcionalmente, a chave para criar salas. O endereço só é aceito se a API responder em `GET /config`. Depois, os dois ficam em **Configurações**.
 
 O app usa, nesta ordem:
 
