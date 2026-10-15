@@ -51,6 +51,9 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run dist -w @screen-share/desktop
+        env:
+          # Variável do repositório (Settings → Secrets and variables → Actions → Variables).
+          SCREEN_SHARE_DEFAULT_API_URL: ${{ vars.SCREEN_SHARE_DEFAULT_API_URL }}
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.version.outputs.version }}

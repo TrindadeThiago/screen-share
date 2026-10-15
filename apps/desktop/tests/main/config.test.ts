@@ -59,6 +59,10 @@ describe('resolveServerUrl', () => {
     expect(resolveServerUrl({ env: 'c.com' })).toBe('https://c.com');
     expect(resolveServerUrl({})).toBe(DEFAULT_SERVER_URL);
   });
+  it('usa o padrão do build antes do placeholder, mas depois das outras fontes', () => {
+    expect(resolveServerUrl({ builtIn: 'd.com' })).toBe('https://d.com');
+    expect(resolveServerUrl({ env: 'c.com', builtIn: 'd.com' })).toBe('https://c.com');
+  });
   it('ignora valores inválidos e cai para o próximo', () => {
     expect(resolveServerUrl({ saved: 'ftp://x', file: 'b.com' })).toBe('https://b.com');
   });

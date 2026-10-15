@@ -1,12 +1,12 @@
 {
   "name": "@screen-share/desktop",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "license": "MIT",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc -p tsconfig.main.json",
+    "build": "vite build && tsc -p tsconfig.main.json && node scripts/write-defaults.mjs",
     "dist": "npm run build && electron-builder --win portable",
     "test": "vitest run",
     "coverage": "vitest run --coverage"

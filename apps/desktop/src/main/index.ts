@@ -14,6 +14,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createCapture } from './capture';
 import {
+  DEFAULTS_FILE_NAME,
   fetchMediaUrl,
   isServerConfigured,
   normalizeMediaUrl,
@@ -92,6 +93,11 @@ async function createWindow() {
       saved: store.getSavedServer(),
       file: readConfigFile(exeDir(), (p) => readFileSync(p, 'utf8')),
       env: process.env.SCREEN_SHARE_API_URL,
+      builtIn: readConfigFile(
+        join(__dirname, '..'),
+        (p) => readFileSync(p, 'utf8'),
+        DEFAULTS_FILE_NAME,
+      ),
     };
     configured = isServerConfigured(sources);
     serverUrl = resolveServerUrl(sources);
@@ -99,10 +105,11 @@ async function createWindow() {
     mediaOverride =
       normalizeMediaUrl(store.getSavedMedia()) ??
       readMediaUrl(exeDir(), (p) => readFileSync(p, 'utf8'));
+    const apiMedia = configured && mediaOverride ? null : await fetchMediaUrl(serverUrl);
+    // Sem endereço definido, o servidor padrão basta se responder; senão, a tela de setup.
+    configured ||= apiMedia !== null;
     const mediaUrl =
-      mediaOverride ??
-      (await fetchMediaUrl(serverUrl)) ??
-      normalizeServerUrl(process.env.SCREEN_SHARE_MEDIA_URL);
+      mediaOverride ?? apiMedia ?? normalizeServerUrl(process.env.SCREEN_SHARE_MEDIA_URL);
     csp = buildCsp(serverUrl, mediaUrl);
   };
   await resolveAll();

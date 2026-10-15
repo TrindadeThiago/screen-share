@@ -2,6 +2,8 @@ import { join } from 'node:path';
 
 export const DEFAULT_SERVER_URL = 'https://screenshare.example.com';
 export const CONFIG_FILE_NAME = 'config.json';
+/** Gravado em dist/ no build, a partir de SCREEN_SHARE_DEFAULT_API_URL: o servidor padrão do .exe. */
+export const DEFAULTS_FILE_NAME = 'defaults.json';
 
 /** Normaliza o endereço digitado: assume https se faltar esquema; só aceita http/https; devolve a origem. */
 export function normalizeServerUrl(input: unknown): string | null {
@@ -58,10 +60,14 @@ export function readMediaUrl(dir: string, readFile: (path: string) => string): s
   }
 }
 
-/** Lê `apiUrl` de um config.json; qualquer falha retorna null. */
-export function readConfigFile(dir: string, readFile: (path: string) => string): string | null {
+/** Lê `apiUrl` de um config.json (ou do defaults.json do build); qualquer falha retorna null. */
+export function readConfigFile(
+  dir: string,
+  readFile: (path: string) => string,
+  fileName = CONFIG_FILE_NAME,
+): string | null {
   try {
-    const data = JSON.parse(readFile(join(dir, CONFIG_FILE_NAME))) as { apiUrl?: unknown };
+    const data = JSON.parse(readFile(join(dir, fileName))) as { apiUrl?: unknown };
     return normalizeServerUrl(data.apiUrl);
   } catch {
     return null;
@@ -72,6 +78,7 @@ export interface ServerSources {
   saved?: string | null; // escolhido na tela do app
   file?: string | null; // config.json ao lado do .exe
   env?: string | null; // SCREEN_SHARE_API_URL
+  builtIn?: string | null; // defaults.json gravado no build
 }
 
 /** Algum endereço válido foi definido (no app, no config.json ou no ambiente)? */
@@ -79,12 +86,13 @@ export function isServerConfigured(s: ServerSources): boolean {
   return [s.saved, s.file, s.env].some((v) => normalizeServerUrl(v) !== null);
 }
 
-/** Prioridade: escolha salva no app > config.json > variável de ambiente > padrão. */
+/** Prioridade: escolha salva no app > config.json > variável de ambiente > padrão do build > placeholder. */
 export function resolveServerUrl(s: ServerSources): string {
   return (
     normalizeServerUrl(s.saved) ??
     normalizeServerUrl(s.file) ??
     normalizeServerUrl(s.env) ??
+    normalizeServerUrl(s.builtIn) ??
     DEFAULT_SERVER_URL
   );
 }

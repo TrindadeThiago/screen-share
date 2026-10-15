@@ -38,14 +38,15 @@ As imagens vêm da página de pré-visualização do projeto, com dados simulado
 
 ## Endereço do servidor
 
-O `.exe` não traz o servidor embutido. Na primeira vez que abre sem servidor definido, o app mostra a tela **Configurar servidor**, que pede o endereço da API e, opcionalmente, a chave para criar salas. O endereço só é aceito se a API responder em `GET /config`. Depois, os dois ficam em **Configurações**.
+O `.exe` pode vir com um servidor padrão, definido no build pela variável `SCREEN_SHARE_DEFAULT_API_URL` (no CI, a variável de mesmo nome do repositório; localmente, o ambiente ou `apps/desktop/.env`, veja `apps/desktop/.env.example`). Com ele, quem só entra em salas não precisa configurar nada. Se nenhum endereço foi definido e o servidor padrão não existe ou não responde, o app mostra a tela **Configurar servidor**, que pede o endereço da API e, opcionalmente, a chave para criar salas. O endereço só é aceito se a API responder em `GET /config`. Depois, os dois ficam em **Configurações**.
 
 O app usa, nesta ordem:
 
 1. o endereço salvo no app (tela inicial ou **Configurações**; o app recarrega ao salvar);
 2. um arquivo `config.json` ao lado do `.exe`: `{ "apiUrl": "http://100.x.y.z:3000", "serverKey": "..." }`;
 3. a variável de ambiente `SCREEN_SHARE_API_URL`;
-4. o padrão `https://screenshare.example.com` (placeholder).
+4. o servidor padrão do build (`SCREEN_SHARE_DEFAULT_API_URL`);
+5. o placeholder `https://screenshare.example.com`.
 
 Quem hospeda o servidor no próprio PC e não o alcança pelo IP público usa `http://localhost:...` como endereço e preenche **Servidor de mídia** em **Configurações** com `ws://localhost:7880`. O app recarrega ao salvar, e **Usar automático** volta ao endereço informado pela API. Também dá para pôr `"mediaUrl": "ws://localhost:7880"` no `config.json`; o valor salvo no app tem prioridade.
 
