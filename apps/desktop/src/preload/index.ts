@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { ScreenShareBridge } from '../shared';
 
 const bridge: ScreenShareBridge = {
+  platform: process.platform,
   listSources: () => ipcRenderer.invoke('capture:list'),
   selectSource: (id) => ipcRenderer.invoke('capture:select', id),
   getAppVersion: () => ipcRenderer.invoke('app:version'),

@@ -49,6 +49,8 @@ export interface RoomViewProps {
   serverUrl: string;
   readSample: () => Promise<StatsSample | null>;
   onToggleMic: (open: boolean) => void;
+  /** A fonte é escolhida pelo sistema (Linux/Wayland): não abre o seletor do app. */
+  systemPicker?: boolean;
   onPickSource: (id: string) => void;
   onStopShare: () => void;
   onLeave: () => void;
@@ -81,6 +83,7 @@ const QUALITY_TEXT: Record<string, string> = {
 
 export function RoomView(p: RoomViewProps) {
   const [picking, setPicking] = useState(false);
+  const pickSource = () => (p.systemPicker ? p.onPickSource('system') : setPicking(true));
   const [showStats, setShowStats] = useState(p.initialStats ?? false);
   const [showPeople, setShowPeople] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -213,7 +216,7 @@ export function RoomView(p: RoomViewProps) {
         <div className="flex items-center gap-2">
           {broadcasting ? (
             <>
-              <Button icon={<RefreshCw size={16} />} onClick={() => setPicking(true)}>
+              <Button icon={<RefreshCw size={16} />} onClick={pickSource}>
                 Trocar fonte
               </Button>
               <Button variant="danger" icon={<MonitorX size={16} />} onClick={p.onStopShare}>
@@ -225,7 +228,7 @@ export function RoomView(p: RoomViewProps) {
               variant="primary"
               icon={<MonitorUp size={16} />}
               disabled={p.status !== 'connected'}
-              onClick={() => setPicking(true)}
+              onClick={pickSource}
             >
               Compartilhar tela
             </Button>

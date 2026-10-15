@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build && tsc -p tsconfig.main.json && node scripts/write-defaults.mjs",
     "dist": "npm run build && electron-builder --win portable",
+    "dist:linux": "npm run build && electron-builder --linux AppImage",
     "test": "vitest run",
     "coverage": "vitest run --coverage"
   },

@@ -17,6 +17,7 @@ export function createPresence(
   power: PowerSaveBlockerLike,
   shortcuts: GlobalShortcutLike,
   onMicToggle: () => void,
+  log: (message: string) => void = () => {},
 ) {
   let blocker: number | null = null;
   return {
@@ -24,7 +25,10 @@ export function createPresence(
       if (inRoom === (blocker !== null)) return;
       if (inRoom) {
         blocker = power.start('prevent-display-sleep');
-        shortcuts.register(MIC_TOGGLE_SHORTCUT, onMicToggle);
+        if (!shortcuts.register(MIC_TOGGLE_SHORTCUT, onMicToggle))
+          log(
+            `atalho ${MIC_TOGGLE_SHORTCUT} não registrado (outro app usa ou o sistema não deixa)`,
+          );
       } else {
         power.stop(blocker!);
         blocker = null;

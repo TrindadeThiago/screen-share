@@ -11,6 +11,7 @@ afterEach(() => {
 (globalThis as unknown as { screenShare: unknown }).screenShare = undefined;
 export function installScreenShareMock(overrides: Record<string, unknown> = {}) {
   const mock = {
+    platform: 'win32',
     listSources: vi.fn().mockResolvedValue([]),
     selectSource: vi.fn().mockResolvedValue(undefined),
     getAppVersion: vi.fn().mockResolvedValue('0.1.0'),

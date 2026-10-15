@@ -96,9 +96,11 @@ export function Room({ join, displayName, password, api, serverUrl, mediaUrl, on
 
   // Também serve para trocar de fonte no meio da transmissão (há um corte breve para quem assiste).
   const pick = async (id: string) => {
-    await window.screenShare.selectSource(id);
+    // No Linux a fonte é escolhida pelo sistema, e o som do computador vai com tela ou janela.
+    const linux = window.screenShare.platform === 'linux';
+    if (!linux) await window.screenShare.selectSource(id);
     if (broadcasting) await room.stopShare();
-    setSharingScreenAudio(id.startsWith('screen:'));
+    setSharingScreenAudio(linux || id.startsWith('screen:'));
     await room.startShare(prefs.preset ?? 'motion', { simulcast: prefs.simulcast ?? true });
   };
 
@@ -144,6 +146,7 @@ export function Room({ join, displayName, password, api, serverUrl, mediaUrl, on
       serverUrl={serverUrl ?? ''}
       readSample={readSample}
       onToggleMic={setOpenMic}
+      systemPicker={window.screenShare.platform === 'linux'}
       onPickSource={(id) => void pick(id)}
       onStopShare={() => void room.stopShare()}
       onLeave={() => {

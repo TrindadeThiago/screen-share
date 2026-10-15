@@ -78,11 +78,21 @@ function stateStore() {
 }
 
 /** Pasta do .exe portable (config.json fica ao lado dele). */
-const exeDir = () => process.env.PORTABLE_EXECUTABLE_DIR ?? dirname(app.getPath('exe'));
+// No Linux, o AppImage roda de uma pasta temporária; APPIMAGE aponta o arquivo de verdade.
+const exeDir = () =>
+  process.env.PORTABLE_EXECUTABLE_DIR ??
+  (process.env.APPIMAGE ? dirname(process.env.APPIMAGE) : dirname(app.getPath('exe')));
+
+// Linux: captura de tela pelo PipeWire (Wayland) e atalho global pelo portal do sistema.
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,GlobalShortcutsPortal');
+  app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+}
 
 async function createWindow() {
   const store = stateStore();
-  const capture = createCapture(desktopCapturer as never);
+  const diagnostics = createDiagnostics(join(app.getPath('userData'), 'logs'), fs);
+  const capture = createCapture(desktopCapturer as never, process.platform, diagnostics.log);
   let serverUrl = '';
   let csp = '';
   let mediaOverride: string | null = null;
@@ -115,11 +125,18 @@ async function createWindow() {
   await resolveAll();
 
   const win = new BrowserWindow(createWindowOptions(join(__dirname, '../preload/index.js')));
-  const diagnostics = createDiagnostics(join(app.getPath('userData'), 'logs'), fs);
-  const presence = createPresence(powerSaveBlocker, globalShortcut, () =>
-    win.webContents.send('mic:toggle'),
+  const presence = createPresence(
+    powerSaveBlocker,
+    globalShortcut,
+    () => win.webContents.send('mic:toggle'),
+    diagnostics.log,
   );
-  diagnostics.log(`app ${app.getVersion()} iniciado`);
+  diagnostics.log(`app ${app.getVersion()} iniciado (${process.platform})`);
+  if (process.platform === 'linux')
+    diagnostics.log(
+      `linux: sessão ${process.env.XDG_SESSION_TYPE ?? '?'}, desktop ${process.env.XDG_CURRENT_DESKTOP ?? '?'}, ` +
+        `cofre ${safeStorage.getSelectedStorageBackend()} (cifra ${safeStorage.isEncryptionAvailable() ? 'ok' : 'indisponível'})`,
+    );
   win.on('closed', () => presence.setInRoom(false));
 
   registerIpc(ipcMain, {
