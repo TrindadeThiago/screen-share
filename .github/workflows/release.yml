@@ -18,7 +18,7 @@ jobs:
       - run: npm test
 
   # A versão de apps/desktop/package.json decide a release: se a tag v<versão> ainda não
-  # existe, o merge na main gera o .exe e publica a release. No PR, só avisa o que vai acontecer.
+  # existe, o merge na main gera o .exe e o AppImage e publica a release. No PR, só avisa o que vai acontecer.
   version:
     runs-on: ubuntu-latest
     outputs:
@@ -35,7 +35,7 @@ jobs:
             echo "A versão $version já foi publicada: o merge não gera release." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "release=true" >> "$GITHUB_OUTPUT"
-            echo "O merge na main publica a release v$version com o .exe." >> "$GITHUB_STEP_SUMMARY"
+            echo "O merge na main publica a release v$version com o .exe e o AppImage." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   portable:
@@ -62,3 +62,28 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: apps/desktop/release/ScreenShare-portable.exe
+
+  # Mesma release, mesmo grupo de concorrência: um job espera o outro e anexa o seu arquivo.
+  appimage:
+    if: github.event_name == 'push' && needs.version.outputs.release == 'true'
+    needs: [test, version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency: { group: release, cancel-in-progress: false }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run dist:linux -w @screen-share/desktop
+        env:
+          SCREEN_SHARE_DEFAULT_API_URL: ${{ secrets.SCREEN_SHARE_DEFAULT_API_URL }}
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: ScreenShare ${{ needs.version.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: apps/desktop/release/ScreenShare.AppImage
