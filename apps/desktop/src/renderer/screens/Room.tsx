@@ -87,6 +87,12 @@ export function Room({ join, displayName, password, api, serverUrl, mediaUrl, on
     () => log(`transmissão: ${room.broadcast.state}${room.broadcast.local ? ' (local)' : ''}`),
     [room.broadcast.state, room.broadcast.local],
   );
+  // Som do computador de quem transmite: a faixa só existe se a pessoa compartilhou tela inteira.
+  const watching = room.broadcast.state === 'live' && !room.broadcast.local;
+  const hasAudio = !!room.audioTrack;
+  useEffect(() => {
+    if (watching) log(`áudio da transmissão: ${hasAudio ? 'recebido' : 'ausente'}`);
+  }, [watching, hasAudio]);
   useEffect(() => {
     if (room.quality) log(`qualidade da conexão: ${room.quality}`);
   }, [room.quality]);

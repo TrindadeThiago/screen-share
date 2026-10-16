@@ -71,7 +71,10 @@ function stateStore() {
       delete rest.serverKey;
       if (!key) return write(rest);
       if (!safeStorage.isEncryptionAvailable())
-        throw new Error('Este sistema não oferece como guardar a chave com segurança.');
+        throw new Error(
+          'Este sistema não oferece como guardar a chave com segurança. ' +
+            'Coloque-a em "serverKey" no config.json, na pasta do app.',
+        );
       write({ ...rest, serverKey: safeStorage.encryptString(key).toString('base64') });
     },
   };
@@ -87,6 +90,13 @@ const exeDir = () =>
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,GlobalShortcutsPortal');
   app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+  // O Chromium só reconhece o cofre do GNOME/KDE pelo nome do desktop; em Hyprland, Sway etc.
+  // cai no "basic_text", sem cifra. Fora do KDE (kwallet), usa o Secret Service (libsecret).
+  if (
+    !app.commandLine.hasSwitch('password-store') &&
+    !/kde/i.test(process.env.XDG_CURRENT_DESKTOP ?? '')
+  )
+    app.commandLine.appendSwitch('password-store', 'gnome-libsecret');
 }
 
 async function createWindow() {

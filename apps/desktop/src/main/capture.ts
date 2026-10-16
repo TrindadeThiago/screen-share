@@ -13,7 +13,10 @@ export interface CapturerLike {
 }
 export type DisplayMediaCallback = (streams: { video?: unknown; audio?: 'loopback' }) => void;
 
-const kindOf = (id: string): 'screen' | 'window' =>
+/** Pequena, mas não vazia: escalada para 16:9 ainda não pode virar 0 em nenhum lado. */
+export const LINUX_THUMBNAIL = { width: 160, height: 90 } as const;
+
+const kindOf =(id: string): 'screen' | 'window' =>
   id.startsWith('screen:') ? 'screen' : 'window';
 
 export function createCapture(
@@ -49,8 +52,9 @@ export function createCapture(
       // Linux (Wayland): o app não lista telas; quem pergunta é o sistema (portal), na hora de
       // capturar. Também não há loopback: o áudio do sistema vai por outra faixa (renderer).
       if (platform === 'linux') {
+        // Miniatura 0x0 derruba o Electron < 36 com PipeWire (electron/electron#47591).
         desktopCapturer
-          .getSources({ types: ['screen', 'window'], thumbnailSize: { width: 0, height: 0 } })
+          .getSources({ types: ['screen', 'window'], thumbnailSize: LINUX_THUMBNAIL })
           .then((sources) => {
             log(`captura linux: ${sources.length} fonte(s) ${sources.map((s) => s.id).join(', ')}`);
             callback(sources[0] ? { video: sources[0] } : {});
