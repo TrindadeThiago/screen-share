@@ -56,6 +56,15 @@ describe('captura', () => {
     await vi.waitFor(() => expect(cb).toHaveBeenCalled());
     expect(cb).toHaveBeenCalledWith({ video: expect.objectContaining({ id: 'screen:77:0' }) });
   });
+  it('linux → pede miniatura não vazia (0x0 derruba o Electron com PipeWire)', async () => {
+    const getSources = vi.fn().mockResolvedValue([src('screen:77:0', 'Tela')]);
+    const cb = vi.fn();
+    createCapture({ getSources }, 'linux').displayMediaHandler({}, cb);
+    await vi.waitFor(() => expect(cb).toHaveBeenCalled());
+    const { width, height } = getSources.mock.calls[0]![0].thumbnailSize;
+    expect(width).toBeGreaterThan(0);
+    expect(height).toBeGreaterThan(0);
+  });
   it('linux → portal cancelado vira resposta vazia', async () => {
     const cb = vi.fn();
     make('linux', []).displayMediaHandler({}, cb);
