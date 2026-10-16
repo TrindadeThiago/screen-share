@@ -20,6 +20,8 @@ interface Props {
 }
 
 const DIAGNOSTIC_INTERVAL_MS = 5000;
+/** Tempo para a faixa de som da transmissão chegar depois do vídeo antes de contar como ausente. */
+const AUDIO_GRACE_MS = 5000;
 
 /** Uma linha de métricas para o log de diagnóstico. */
 export function describeSample(prev: StatsSample, curr: StatsSample): string {
@@ -87,11 +89,18 @@ export function Room({ join, displayName, password, api, serverUrl, mediaUrl, on
     () => log(`transmissão: ${room.broadcast.state}${room.broadcast.local ? ' (local)' : ''}`),
     [room.broadcast.state, room.broadcast.local],
   );
-  // Som do computador de quem transmite: a faixa só existe se a pessoa compartilhou tela inteira.
+  // Som do computador de quem transmite: no Windows só vem com a tela inteira; no Linux, com a
+  // fonte Monitor. A faixa chega depois do vídeo, então "ausente" só vale se continuar assim.
   const watching = room.broadcast.state === 'live' && !room.broadcast.local;
   const hasAudio = !!room.audioTrack;
   useEffect(() => {
-    if (watching) log(`áudio da transmissão: ${hasAudio ? 'recebido' : 'ausente'}`);
+    if (!watching) return;
+    if (hasAudio) {
+      log('áudio da transmissão: recebido');
+      return;
+    }
+    const id = setTimeout(() => log('áudio da transmissão: ausente'), AUDIO_GRACE_MS);
+    return () => clearTimeout(id);
   }, [watching, hasAudio]);
   useEffect(() => {
     if (room.quality) log(`qualidade da conexão: ${room.quality}`);

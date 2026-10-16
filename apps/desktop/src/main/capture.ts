@@ -16,7 +16,7 @@ export type DisplayMediaCallback = (streams: { video?: unknown; audio?: 'loopbac
 /** Pequena, mas não vazia: escalada para 16:9 ainda não pode virar 0 em nenhum lado. */
 export const LINUX_THUMBNAIL = { width: 160, height: 90 } as const;
 
-const kindOf =(id: string): 'screen' | 'window' =>
+const kindOf = (id: string): 'screen' | 'window' =>
   id.startsWith('screen:') ? 'screen' : 'window';
 
 export function createCapture(
