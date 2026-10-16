@@ -29,6 +29,7 @@ export function Viewer({
   const audio = useRef<HTMLAudioElement>(null);
   const [volume, setVolume] = useState(initialVolume);
   const [muted, setMuted] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
   // As preferências chegam depois da primeira renderização.
   useEffect(() => setVolume(initialVolume), [initialVolume]);
@@ -54,6 +55,18 @@ export function Viewer({
     }
   }, [volume, muted, audioTrack]);
 
+  // Acompanha o estado real: também se sai da tela cheia com Esc ou pelo gerenciador de janelas.
+  useEffect(() => {
+    const sync = () => setFullscreen(!!box.current && document.fullscreenElement === box.current);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen?.();
+    else void box.current?.requestFullscreen?.();
+  };
+
   const live = state === 'live';
   return (
     <div
@@ -67,6 +80,7 @@ export function Viewer({
         muted
         data-testid="video"
         hidden={!live}
+        onDoubleClick={toggleFullscreen}
         className="size-full object-contain"
       />
       <audio ref={audio} autoPlay data-testid="audio" />
@@ -88,7 +102,8 @@ export function Viewer({
               onVolumeChange?.(v);
             }}
             onToggleMute={() => setMuted((m) => !m)}
-            onFullscreen={() => void box.current?.requestFullscreen?.()}
+            fullscreen={fullscreen}
+            onFullscreen={toggleFullscreen}
           />
         </div>
       )}

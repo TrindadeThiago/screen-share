@@ -30,4 +30,25 @@ describe('controles do espectador', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tela cheia' }));
     expect(fn).toHaveBeenCalled();
   });
+  it('em tela cheia, o botão sai dela (também com Esc, pelo evento)', async () => {
+    const exit = vi.fn();
+    document.exitFullscreen = exit;
+    HTMLElement.prototype.requestFullscreen = vi.fn();
+    setup();
+    const box = screen.getByTestId('video').parentElement!;
+    Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => box });
+    fireEvent(document, new Event('fullscreenchange'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Sair da tela cheia' }));
+    expect(exit).toHaveBeenCalled();
+    Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => null });
+    fireEvent(document, new Event('fullscreenchange'));
+    expect(await screen.findByRole('button', { name: 'Tela cheia' })).toBeTruthy();
+  });
+  it('duplo clique no vídeo alterna a tela cheia', async () => {
+    const fn = vi.fn();
+    HTMLElement.prototype.requestFullscreen = fn;
+    setup();
+    await userEvent.dblClick(screen.getByTestId('video'));
+    expect(fn).toHaveBeenCalled();
+  });
 });
