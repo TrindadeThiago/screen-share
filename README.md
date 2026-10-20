@@ -4,9 +4,9 @@
 [![CI](https://github.com/TrindadeThiago/screen-share/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/TrindadeThiago/screen-share/actions/workflows/release.yml)
 [![Licença MIT](https://img.shields.io/github/license/TrindadeThiago/screen-share?label=licen%C3%A7a)](LICENSE)
 
-**[Baixar o .exe da versão mais recente](https://github.com/TrindadeThiago/screen-share/releases/latest/download/ScreenShare-portable.exe)** (Windows 10/11, sem instalação).
+**Baixar a versão mais recente:** [Windows (.exe)](https://github.com/TrindadeThiago/screen-share/releases/latest/download/ScreenShare-portable.exe) · [Linux (AppImage)](https://github.com/TrindadeThiago/screen-share/releases/latest/download/ScreenShare.AppImage). Sem instalação.
 
-App desktop (Windows 10/11, `.exe` portable) para compartilhar a tela com amigos, com o áudio do computador. Sem login: crie uma sala, envie o código, os amigos entram.
+App desktop (Windows 10/11 com `.exe` portable, Linux com AppImage) para compartilhar a tela com amigos, com o áudio do computador. Sem login: crie uma sala, envie o código, os amigos entram.
 
 ![Assistindo a uma transmissão, com as métricas abertas](docs/screenshots/room-watching.png)
 
@@ -36,6 +36,21 @@ As imagens vêm da página de pré-visualização do projeto, com dados simulado
 5. **Voz:** o botão do microfone, ou `Ctrl+Shift+M` de qualquer lugar, liga e desliga o microfone. Em **Configurações** dá para habilitar "segurar `V` para falar" e trocar a tecla.
 6. **Deu problema?** _Copiar diagnóstico_, em **Configurações**, copia o log (sem códigos de sala) para você colar e enviar.
 
+## Linux
+
+Testado no Fedora 44 com Hyprland (Wayland e PipeWire).
+
+1. Baixe o `ScreenShare.AppImage` da [última release](https://github.com/TrindadeThiago/screen-share/releases/latest) e dê permissão de execução: `chmod +x ScreenShare.AppImage` (ou, no gerenciador de arquivos, _Propriedades → Permissões → É executável_).
+2. Abra com dois cliques ou `./ScreenShare.AppImage`. Se reclamar de FUSE, instale a `libfuse2` (no Fedora, `sudo dnf install fuse-libs`).
+
+O que muda em relação ao Windows:
+
+- **Escolher a tela:** quem pergunta o que compartilhar é o sistema (portal do Wayland), não o seletor do app.
+- **Som do computador:** vai junto com tela ou janela, pela fonte "Monitor of …" do PipeWire, ou seja, todo o som que sai pelos alto-falantes. A opção _Silenciar as vozes para mim enquanto transmito_ evita o eco, como no Windows.
+- **Chave do servidor:** fica no KWallet (KDE) ou no Secret Service (GNOME, Hyprland, Sway etc.). Sem nenhum cofre rodando, ponha a chave em `serverKey` no `config.json` ao lado do AppImage.
+
+Para gerar o AppImage: `npm run dist:linux -w @screen-share/desktop` (em Linux).
+
 ## Endereço do servidor
 
 O `.exe` pode vir com um servidor padrão, definido no build pela variável `SCREEN_SHARE_DEFAULT_API_URL` (no CI, o secret de mesmo nome do repositório; localmente, o ambiente ou `apps/desktop/.env`, veja `apps/desktop/.env.example`). Com ele, quem só entra em salas não precisa configurar nada. Se nenhum endereço foi definido e o servidor padrão não existe ou não responde, o app mostra a tela **Configurar servidor**, que pede o endereço da API e, opcionalmente, a chave para criar salas. O endereço só é aceito se a API responder em `GET /config`. Depois, os dois ficam em **Configurações**.
@@ -43,7 +58,7 @@ O `.exe` pode vir com um servidor padrão, definido no build pela variável `SCR
 O app usa, nesta ordem:
 
 1. o endereço salvo no app (tela inicial ou **Configurações**; o app recarrega ao salvar);
-2. um arquivo `config.json` ao lado do `.exe`: `{ "apiUrl": "http://100.x.y.z:3000", "serverKey": "..." }`;
+2. um arquivo `config.json` ao lado do `.exe` (ou do AppImage): `{ "apiUrl": "http://100.x.y.z:3000", "serverKey": "..." }`;
 3. a variável de ambiente `SCREEN_SHARE_API_URL`;
 4. o servidor padrão do build (`SCREEN_SHARE_DEFAULT_API_URL`);
 5. o placeholder `https://screenshare.example.com`.
@@ -52,7 +67,7 @@ Quem hospeda o servidor no próprio PC e não o alcança pelo IP público usa `h
 
 O app descobre o endereço do LiveKit sozinho, pela rota `GET /config` da API. O `config.json` é opcional: serve para mandar o `.exe` já configurado aos amigos, sem passar pela tela inicial.
 
-Se o servidor exigir chave para criar salas (`ROOM_CREATION_KEY`, veja `infra/README.md`), quem cria salas precisa dela. A ordem é a mesma: chave salva no app > `serverKey` no `config.json` > variável `SCREEN_SHARE_SERVER_KEY`. Se faltar a chave, o app a pede ao criar a sala e a guarda cifrada pelo sistema (DPAPI no Windows). Quem só entra com o código não precisa.
+Se o servidor exigir chave para criar salas (`ROOM_CREATION_KEY`, veja `infra/README.md`), quem cria salas precisa dela. A ordem é a mesma: chave salva no app > `serverKey` no `config.json` > variável `SCREEN_SHARE_SERVER_KEY`. Se faltar a chave, o app a pede ao criar a sala e a guarda cifrada pelo sistema (DPAPI no Windows; no Linux, KWallet ou o Secret Service, como o gnome-keyring). Quem só entra com o código não precisa.
 
 ## Desenvolver
 
@@ -62,6 +77,7 @@ npm test            # Vitest: API e app
 npm run lint
 npm run dev -w @screen-share/desktop        # renderer (Vite)
 npm run dist -w @screen-share/desktop       # gera o .exe portable (em Windows)
+npm run dist:linux -w @screen-share/desktop # gera o AppImage (em Linux)
 ```
 
 Com o `npm run dev` rodando, `/preview.html` mostra cada tela com dados simulados, sem servidor (por exemplo `/preview.html?v=room-live`).
@@ -70,7 +86,7 @@ Variáveis opcionais do app: `SCREEN_SHARE_API_URL` e `SCREEN_SHARE_MEDIA_URL` (
 
 ## Versões e releases
 
-A versão do app é a de `apps/desktop/package.json`. Quando um PR que muda essa versão entra na `main`, o GitHub Actions gera o `.exe` no Windows e publica a release `v<versão>` com ele e as notas geradas pelos PRs. Merges que não mudam a versão só rodam lint e testes; no PR, o resumo do job `version` diz se o merge vai publicar uma release.
+A versão do app é a de `apps/desktop/package.json`. Quando um PR que muda essa versão entra na `main`, o GitHub Actions gera o `.exe` no Windows e o AppImage no Linux e publica a release `v<versão>` com os dois e as notas geradas pelos PRs. Merges que não mudam a versão só rodam lint e testes; no PR, o resumo do job `version` diz se o merge vai publicar uma release.
 
 Para lançar uma versão, aumente-a no PR (`npm version <patch|minor|major> -w @screen-share/desktop --no-git-tag-version`): patch para correções, minor para funcionalidades novas, major para mudanças incompatíveis.
 
