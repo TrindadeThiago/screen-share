@@ -6,12 +6,10 @@ const src = (id: string, name: string) => ({
   name,
   thumbnail: { toDataURL: () => `data:${id}` },
 });
-const make = () =>
-  createCapture({
-    getSources: vi
-      .fn()
-      .mockResolvedValue([src('screen:0:0', 'Tela 1'), src('window:42:0', 'Jogo')]),
-  });
+const make = (
+  platform = 'win32',
+  sources = [src('screen:0:0', 'Tela 1'), src('window:42:0', 'Jogo')],
+) => createCapture({ getSources: vi.fn().mockResolvedValue(sources) }, platform);
 
 describe('captura', () => {
   it('lista fontes com tipo e miniatura', async () => {
@@ -51,5 +49,25 @@ describe('captura', () => {
     const cb = vi.fn();
     make().displayMediaHandler({}, cb);
     expect(cb).toHaveBeenCalledWith({});
+  });
+  it('linux → a fonte escolhida no portal do sistema, sem loopback', async () => {
+    const cb = vi.fn();
+    make('linux', [src('screen:77:0', 'Tela')]).displayMediaHandler({}, cb);
+    await vi.waitFor(() => expect(cb).toHaveBeenCalled());
+    expect(cb).toHaveBeenCalledWith({ video: expect.objectContaining({ id: 'screen:77:0' }) });
+  });
+  it('linux → pede miniatura não vazia (0x0 derruba o Electron com PipeWire)', async () => {
+    const getSources = vi.fn().mockResolvedValue([src('screen:77:0', 'Tela')]);
+    const cb = vi.fn();
+    createCapture({ getSources }, 'linux').displayMediaHandler({}, cb);
+    await vi.waitFor(() => expect(cb).toHaveBeenCalled());
+    const { width, height } = getSources.mock.calls[0]![0].thumbnailSize;
+    expect(width).toBeGreaterThan(0);
+    expect(height).toBeGreaterThan(0);
+  });
+  it('linux → portal cancelado vira resposta vazia', async () => {
+    const cb = vi.fn();
+    make('linux', []).displayMediaHandler({}, cb);
+    await vi.waitFor(() => expect(cb).toHaveBeenCalledWith({}));
   });
 });

@@ -71,18 +71,38 @@ function stateStore() {
       delete rest.serverKey;
       if (!key) return write(rest);
       if (!safeStorage.isEncryptionAvailable())
-        throw new Error('Este sistema não oferece como guardar a chave com segurança.');
+        throw new Error(
+          'Este sistema não oferece como guardar a chave com segurança. ' +
+            'Coloque-a em "serverKey" no config.json, na pasta do app.',
+        );
       write({ ...rest, serverKey: safeStorage.encryptString(key).toString('base64') });
     },
   };
 }
 
 /** Pasta do .exe portable (config.json fica ao lado dele). */
-const exeDir = () => process.env.PORTABLE_EXECUTABLE_DIR ?? dirname(app.getPath('exe'));
+// No Linux, o AppImage roda de uma pasta temporária; APPIMAGE aponta o arquivo de verdade.
+const exeDir = () =>
+  process.env.PORTABLE_EXECUTABLE_DIR ??
+  (process.env.APPIMAGE ? dirname(process.env.APPIMAGE) : dirname(app.getPath('exe')));
+
+// Linux: captura de tela pelo PipeWire (Wayland) e atalho global pelo portal do sistema.
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,GlobalShortcutsPortal');
+  app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+  // O Chromium só reconhece o cofre do GNOME/KDE pelo nome do desktop; em Hyprland, Sway etc.
+  // cai no "basic_text", sem cifra. Fora do KDE (kwallet), usa o Secret Service (libsecret).
+  if (
+    !app.commandLine.hasSwitch('password-store') &&
+    !/kde/i.test(process.env.XDG_CURRENT_DESKTOP ?? '')
+  )
+    app.commandLine.appendSwitch('password-store', 'gnome-libsecret');
+}
 
 async function createWindow() {
   const store = stateStore();
-  const capture = createCapture(desktopCapturer as never);
+  const diagnostics = createDiagnostics(join(app.getPath('userData'), 'logs'), fs);
+  const capture = createCapture(desktopCapturer as never, process.platform, diagnostics.log);
   let serverUrl = '';
   let csp = '';
   let mediaOverride: string | null = null;
@@ -115,11 +135,18 @@ async function createWindow() {
   await resolveAll();
 
   const win = new BrowserWindow(createWindowOptions(join(__dirname, '../preload/index.js')));
-  const diagnostics = createDiagnostics(join(app.getPath('userData'), 'logs'), fs);
-  const presence = createPresence(powerSaveBlocker, globalShortcut, () =>
-    win.webContents.send('mic:toggle'),
+  const presence = createPresence(
+    powerSaveBlocker,
+    globalShortcut,
+    () => win.webContents.send('mic:toggle'),
+    diagnostics.log,
   );
-  diagnostics.log(`app ${app.getVersion()} iniciado`);
+  diagnostics.log(`app ${app.getVersion()} iniciado (${process.platform})`);
+  if (process.platform === 'linux')
+    diagnostics.log(
+      `linux: sessão ${process.env.XDG_SESSION_TYPE ?? '?'}, desktop ${process.env.XDG_CURRENT_DESKTOP ?? '?'}, ` +
+        `cofre ${safeStorage.getSelectedStorageBackend()} (cifra ${safeStorage.isEncryptionAvailable() ? 'ok' : 'indisponível'})`,
+    );
   win.on('closed', () => presence.setInRoom(false));
 
   registerIpc(ipcMain, {

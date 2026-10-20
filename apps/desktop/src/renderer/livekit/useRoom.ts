@@ -14,6 +14,7 @@ import {
 } from 'livekit-client';
 import type { JoinResult } from '../api/client';
 import { captureOptions, publishOptions, type PresetName, type PublishChoices } from './presets';
+import { publishMonitorAudio, usesMonitorAudio } from './systemAudio';
 
 export type Status = 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error';
 export type BroadcastState = 'none' | 'live' | 'ended' | 'interrupted';
@@ -135,11 +136,15 @@ export function useRoom(initial: JoinResult, opts: UseRoomOptions = {}) {
           await requestBroadcast(joinRef.current.token);
           await waitForSharePermission(room, permissionTimeoutMs);
         }
+        const monitorAudio = usesMonitorAudio();
+        const capture = { ...captureOptions(preset), ...(monitorAudio && { audio: false }) };
+        const publish = publishOptions(preset, choices) as TrackPublishOptions;
         await room.localParticipant.setScreenShareEnabled(
           true,
-          captureOptions(preset) as ScreenShareCaptureOptions,
-          publishOptions(preset, choices) as TrackPublishOptions,
+          capture as ScreenShareCaptureOptions,
+          publish,
         );
+        if (monitorAudio) await publishMonitorAudio(room, publish).catch(() => false);
       } catch (e) {
         setWarning(
           (e as { code?: string })?.code === 'broadcast_busy'

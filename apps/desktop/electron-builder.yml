@@ -16,3 +16,10 @@ win:
   artifactName: ScreenShare-portable.exe
 portable:
   artifactName: ScreenShare-portable.exe
+linux:
+  executableName: screenshare
+  target:
+    - target: AppImage
+      arch: [x64]
+  category: Network
+  artifactName: ScreenShare.AppImage

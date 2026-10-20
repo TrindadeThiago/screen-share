@@ -13,10 +13,17 @@ export interface CapturerLike {
 }
 export type DisplayMediaCallback = (streams: { video?: unknown; audio?: 'loopback' }) => void;
 
+/** Pequena, mas não vazia: escalada para 16:9 ainda não pode virar 0 em nenhum lado. */
+export const LINUX_THUMBNAIL = { width: 160, height: 90 } as const;
+
 const kindOf = (id: string): 'screen' | 'window' =>
   id.startsWith('screen:') ? 'screen' : 'window';
 
-export function createCapture(desktopCapturer: CapturerLike) {
+export function createCapture(
+  desktopCapturer: CapturerLike,
+  platform: string = process.platform,
+  log: (message: string) => void = () => {},
+) {
   const known = new Map<string, RawSource>();
   let selected: RawSource | null = null;
 
@@ -42,6 +49,22 @@ export function createCapture(desktopCapturer: CapturerLike) {
     },
     /** Handler para session.setDisplayMediaRequestHandler. */
     displayMediaHandler(_request: unknown, callback: DisplayMediaCallback): void {
+      // Linux (Wayland): o app não lista telas; quem pergunta é o sistema (portal), na hora de
+      // capturar. Também não há loopback: o áudio do sistema vai por outra faixa (renderer).
+      if (platform === 'linux') {
+        // Miniatura 0x0 derruba o Electron < 36 com PipeWire (electron/electron#47591).
+        desktopCapturer
+          .getSources({ types: ['screen', 'window'], thumbnailSize: LINUX_THUMBNAIL })
+          .then((sources) => {
+            log(`captura linux: ${sources.length} fonte(s) ${sources.map((s) => s.id).join(', ')}`);
+            callback(sources[0] ? { video: sources[0] } : {});
+          })
+          .catch((e) => {
+            log(`captura linux: falhou (${String(e)})`);
+            callback({});
+          });
+        return;
+      }
       if (!selected) return callback({});
       // Tela inteira: vídeo + áudio do sistema (loopback). Janela: só vídeo.
       if (kindOf(selected.id) === 'screen') callback({ video: selected, audio: 'loopback' });

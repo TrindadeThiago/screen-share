@@ -41,6 +41,7 @@ const sources: CaptureSource[] = [
 const prefs: Preferences = { displayName: 'Ana', preset: 'motion', simulcast: true, volume: 0.8 };
 
 const bridge: ScreenShareBridge = {
+  platform: 'win32',
   listSources: async () => sources,
   selectSource: async () => {},
   getAppVersion: async () => '0.1.0',

@@ -25,6 +25,8 @@ export interface Preferences {
 
 /** Contrato exposto ao renderer como window.screenShare (ver contracts/desktop-ipc.md). */
 export interface ScreenShareBridge {
+  /** Sistema operacional (process.platform): no Linux, a tela é escolhida pelo sistema. */
+  platform: string;
   listSources(): Promise<CaptureSource[]>;
   selectSource(id: string): Promise<void>;
   getAppVersion(): Promise<string>;

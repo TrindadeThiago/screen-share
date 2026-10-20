@@ -22,7 +22,7 @@ npm run lint
 
 Para subir o servidor e abrir o app, siga o [quickstart.md](quickstart.md). Para ver as telas sem servidor, rode `npm run dev -w @screen-share/desktop` e abra `/preview.html` (por exemplo `/preview.html?v=room-live`).
 
-O `.exe` é gerado no Windows com `npm run dist -w @screen-share/desktop`, com o projeto numa pasta do Windows (não dentro do WSL).
+O `.exe` é gerado no Windows com `npm run dist -w @screen-share/desktop`, com o projeto numa pasta do Windows (não dentro do WSL). O AppImage é gerado em Linux (o WSL serve) com `npm run dist:linux -w @screen-share/desktop`.
 
 ## Enviar uma mudança
 
@@ -42,7 +42,7 @@ A `main` é protegida: não aceita push direto nem force push, e o merge exige o
 
 ## Lançar uma versão
 
-A versão do app é a de `apps/desktop/package.json`. Quando um PR que muda essa versão entra na `main`, o GitHub Actions gera o `.exe` e publica a release `v<versão>`. No PR, o resumo do job `version` diz se o merge vai publicar uma release.
+A versão do app é a de `apps/desktop/package.json`. Quando um PR que muda essa versão entra na `main`, o GitHub Actions gera o `.exe` e o AppImage e publica a release `v<versão>`. No PR, o resumo do job `version` diz se o merge vai publicar uma release.
 
 Para lançar, aumente a versão no próprio PR:
 

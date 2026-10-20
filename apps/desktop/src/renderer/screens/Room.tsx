@@ -20,6 +20,8 @@ interface Props {
 }
 
 const DIAGNOSTIC_INTERVAL_MS = 5000;
+/** Tempo para a faixa de som da transmissão chegar depois do vídeo antes de contar como ausente. */
+const AUDIO_GRACE_MS = 5000;
 
 /** Uma linha de métricas para o log de diagnóstico. */
 export function describeSample(prev: StatsSample, curr: StatsSample): string {
@@ -87,6 +89,19 @@ export function Room({ join, displayName, password, api, serverUrl, mediaUrl, on
     () => log(`transmissão: ${room.broadcast.state}${room.broadcast.local ? ' (local)' : ''}`),
     [room.broadcast.state, room.broadcast.local],
   );
+  // Som do computador de quem transmite: no Windows só vem com a tela inteira; no Linux, com a
+  // fonte Monitor. A faixa chega depois do vídeo, então "ausente" só vale se continuar assim.
+  const watching = room.broadcast.state === 'live' && !room.broadcast.local;
+  const hasAudio = !!room.audioTrack;
+  useEffect(() => {
+    if (!watching) return;
+    if (hasAudio) {
+      log('áudio da transmissão: recebido');
+      return;
+    }
+    const id = setTimeout(() => log('áudio da transmissão: ausente'), AUDIO_GRACE_MS);
+    return () => clearTimeout(id);
+  }, [watching, hasAudio]);
   useEffect(() => {
     if (room.quality) log(`qualidade da conexão: ${room.quality}`);
   }, [room.quality]);
@@ -96,9 +111,11 @@ export function Room({ join, displayName, password, api, serverUrl, mediaUrl, on
 
   // Também serve para trocar de fonte no meio da transmissão (há um corte breve para quem assiste).
   const pick = async (id: string) => {
-    await window.screenShare.selectSource(id);
+    // No Linux a fonte é escolhida pelo sistema, e o som do computador vai com tela ou janela.
+    const linux = window.screenShare.platform === 'linux';
+    if (!linux) await window.screenShare.selectSource(id);
     if (broadcasting) await room.stopShare();
-    setSharingScreenAudio(id.startsWith('screen:'));
+    setSharingScreenAudio(linux || id.startsWith('screen:'));
     await room.startShare(prefs.preset ?? 'motion', { simulcast: prefs.simulcast ?? true });
   };
 
@@ -144,6 +161,7 @@ export function Room({ join, displayName, password, api, serverUrl, mediaUrl, on
       serverUrl={serverUrl ?? ''}
       readSample={readSample}
       onToggleMic={setOpenMic}
+      systemPicker={window.screenShare.platform === 'linux'}
       onPickSource={(id) => void pick(id)}
       onStopShare={() => void room.stopShare()}
       onLeave={() => {
